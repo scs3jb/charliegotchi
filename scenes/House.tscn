@@ -1,0 +1,457 @@
+[gd_scene load_steps=5 format=3 uid="uid://house"]
+
+[ext_resource type="Script" path="res://scripts/scenes/House.gd" id="1_house"]
+[ext_resource type="Script" path="res://scripts/player/Player.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/charlie/Charlie.gd" id="3_charlie"]
+[ext_resource type="Script" path="res://scripts/ui/HUD.gd" id="4_hud"]
+
+[node name="House" type="Node2D"]
+script = ExtResource("1_house")
+
+[node name="Floor" type="ColorRect" parent="."]
+offset_right = 426.0
+offset_bottom = 240.0
+color = Color(0.6, 0.45, 0.3, 1)
+
+[node name="FloorPattern" type="Node2D" parent="."]
+
+[node name="Plank1" type="ColorRect" parent="FloorPattern"]
+offset_top = 30.0
+offset_right = 426.0
+offset_bottom = 32.0
+color = Color(0.55, 0.4, 0.25, 1)
+
+[node name="Plank2" type="ColorRect" parent="FloorPattern"]
+offset_top = 70.0
+offset_right = 426.0
+offset_bottom = 72.0
+color = Color(0.55, 0.4, 0.25, 1)
+
+[node name="Plank3" type="ColorRect" parent="FloorPattern"]
+offset_top = 110.0
+offset_right = 426.0
+offset_bottom = 112.0
+color = Color(0.55, 0.4, 0.25, 1)
+
+[node name="Plank4" type="ColorRect" parent="FloorPattern"]
+offset_top = 150.0
+offset_right = 426.0
+offset_bottom = 152.0
+color = Color(0.55, 0.4, 0.25, 1)
+
+[node name="Plank5" type="ColorRect" parent="FloorPattern"]
+offset_top = 190.0
+offset_right = 426.0
+offset_bottom = 192.0
+color = Color(0.55, 0.4, 0.25, 1)
+
+[node name="Walls" type="Node2D" parent="."]
+
+[node name="WallTop" type="ColorRect" parent="Walls"]
+offset_right = 426.0
+offset_bottom = 16.0
+color = Color(0.4, 0.3, 0.2, 1)
+
+[node name="WallLeft" type="ColorRect" parent="Walls"]
+offset_right = 16.0
+offset_bottom = 240.0
+color = Color(0.4, 0.3, 0.2, 1)
+
+[node name="WallRight" type="ColorRect" parent="Walls"]
+offset_left = 410.0
+offset_right = 426.0
+offset_bottom = 240.0
+color = Color(0.4, 0.3, 0.2, 1)
+
+[node name="WallBottom" type="ColorRect" parent="Walls"]
+offset_top = 224.0
+offset_right = 180.0
+offset_bottom = 240.0
+color = Color(0.4, 0.3, 0.2, 1)
+
+[node name="WallBottomRight" type="ColorRect" parent="Walls"]
+offset_left = 246.0
+offset_top = 224.0
+offset_right = 426.0
+offset_bottom = 240.0
+color = Color(0.4, 0.3, 0.2, 1)
+
+[node name="Window" type="Node2D" parent="."]
+position = Vector2(350, 16)
+
+[node name="Frame" type="ColorRect" parent="Window"]
+offset_left = -25.0
+offset_right = 25.0
+offset_bottom = 35.0
+color = Color(0.35, 0.25, 0.15, 1)
+
+[node name="Glass" type="ColorRect" parent="Window"]
+offset_left = -22.0
+offset_top = 3.0
+offset_right = 22.0
+offset_bottom = 32.0
+color = Color(0.6, 0.75, 0.9, 1)
+
+[node name="CrossV" type="ColorRect" parent="Window"]
+offset_left = -1.0
+offset_top = 3.0
+offset_right = 1.0
+offset_bottom = 32.0
+color = Color(0.35, 0.25, 0.15, 1)
+
+[node name="CrossH" type="ColorRect" parent="Window"]
+offset_left = -22.0
+offset_top = 16.0
+offset_right = 22.0
+offset_bottom = 18.0
+color = Color(0.35, 0.25, 0.15, 1)
+
+[node name="Rug" type="ColorRect" parent="."]
+offset_left = 150.0
+offset_top = 100.0
+offset_right = 276.0
+offset_bottom = 180.0
+color = Color(0.6, 0.3, 0.3, 1)
+
+[node name="RugPattern" type="ColorRect" parent="Rug"]
+offset_left = 5.0
+offset_top = 5.0
+offset_right = 121.0
+offset_bottom = 75.0
+color = Color(0.7, 0.4, 0.35, 1)
+
+[node name="Door" type="Area2D" parent="." groups=["interactable"]]
+position = Vector2(213, 232)
+
+[node name="DoorFrame" type="ColorRect" parent="Door"]
+offset_left = -35.0
+offset_top = -8.0
+offset_right = 35.0
+offset_bottom = 8.0
+color = Color(0.35, 0.25, 0.15, 1)
+
+[node name="DoorMat" type="ColorRect" parent="Door"]
+offset_left = -30.0
+offset_top = -12.0
+offset_right = 30.0
+offset_bottom = -6.0
+color = Color(0.5, 0.35, 0.25, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Door"]
+
+[node name="FoodBowl" type="Area2D" parent="." groups=["interactable"]]
+position = Vector2(50, 50)
+
+[node name="Bowl" type="ColorRect" parent="FoodBowl"]
+offset_left = -18.0
+offset_top = -8.0
+offset_right = 18.0
+offset_bottom = 10.0
+color = Color(0.7, 0.5, 0.35, 1)
+
+[node name="BowlInner" type="ColorRect" parent="FoodBowl"]
+offset_left = -14.0
+offset_top = -4.0
+offset_right = 14.0
+offset_bottom = 6.0
+color = Color(0.8, 0.6, 0.4, 1)
+
+[node name="Food" type="ColorRect" parent="FoodBowl"]
+offset_left = -10.0
+offset_top = -2.0
+offset_right = 10.0
+offset_bottom = 4.0
+color = Color(0.55, 0.35, 0.2, 1)
+
+[node name="Label" type="Label" parent="FoodBowl"]
+offset_left = -20.0
+offset_top = 12.0
+offset_right = 20.0
+offset_bottom = 26.0
+theme_override_font_sizes/font_size = 9
+text = "Food"
+horizontal_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FoodBowl"]
+
+[node name="PetBed" type="Area2D" parent="." groups=["interactable"]]
+position = Vector2(376, 50)
+
+[node name="BedOuter" type="ColorRect" parent="PetBed"]
+offset_left = -28.0
+offset_top = -16.0
+offset_right = 28.0
+offset_bottom = 16.0
+color = Color(0.5, 0.35, 0.45, 1)
+
+[node name="BedInner" type="ColorRect" parent="PetBed"]
+offset_left = -22.0
+offset_top = -10.0
+offset_right = 22.0
+offset_bottom = 10.0
+color = Color(0.65, 0.45, 0.55, 1)
+
+[node name="Cushion" type="ColorRect" parent="PetBed"]
+offset_left = -18.0
+offset_top = -6.0
+offset_right = 18.0
+offset_bottom = 6.0
+color = Color(0.75, 0.55, 0.65, 1)
+
+[node name="Label" type="Label" parent="PetBed"]
+offset_left = -24.0
+offset_top = 18.0
+offset_right = 24.0
+offset_bottom = 32.0
+theme_override_font_sizes/font_size = 9
+text = "Bed"
+horizontal_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PetBed"]
+
+[node name="Ball" type="Area2D" parent="." groups=["interactable"]]
+position = Vector2(213, 140)
+
+[node name="BallShape" type="ColorRect" parent="Ball"]
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 8.0
+color = Color(1, 0.3, 0.3, 1)
+
+[node name="BallHighlight" type="ColorRect" parent="Ball"]
+offset_left = -5.0
+offset_top = -5.0
+offset_right = -2.0
+offset_bottom = -2.0
+color = Color(1, 0.5, 0.5, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ball"]
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(213, 180)
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("2_player")
+
+[node name="Shadow" type="ColorRect" parent="Player"]
+offset_left = -10.0
+offset_top = 12.0
+offset_right = 10.0
+offset_bottom = 16.0
+color = Color(0, 0, 0, 0.2)
+
+[node name="Body" type="ColorRect" parent="Player"]
+offset_left = -10.0
+offset_top = -5.0
+offset_right = 10.0
+offset_bottom = 14.0
+color = Color(0.95, 0.75, 0.8, 1)
+
+[node name="Head" type="ColorRect" parent="Player"]
+offset_left = -8.0
+offset_top = -16.0
+offset_right = 8.0
+offset_bottom = -4.0
+color = Color(1, 0.9, 0.8, 1)
+
+[node name="Hair" type="ColorRect" parent="Player"]
+offset_left = -9.0
+offset_top = -20.0
+offset_right = 9.0
+offset_bottom = -12.0
+color = Color(1, 0.85, 0.4, 1)
+
+[node name="HairSide" type="ColorRect" parent="Player"]
+offset_left = -10.0
+offset_top = -18.0
+offset_right = -7.0
+offset_bottom = -6.0
+color = Color(1, 0.85, 0.4, 1)
+
+[node name="EyeL" type="ColorRect" parent="Player"]
+offset_left = -5.0
+offset_top = -13.0
+offset_right = -3.0
+offset_bottom = -11.0
+color = Color(0.2, 0.4, 0.6, 1)
+
+[node name="EyeR" type="ColorRect" parent="Player"]
+offset_left = 3.0
+offset_top = -13.0
+offset_right = 5.0
+offset_bottom = -11.0
+color = Color(0.2, 0.4, 0.6, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Player"]
+
+[node name="InteractionArea" type="Area2D" parent="Player"]
+collision_layer = 0
+collision_mask = 32
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player/InteractionArea"]
+
+[node name="Charlie" type="CharacterBody2D" parent="."]
+position = Vector2(280, 160)
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("3_charlie")
+
+[node name="Shadow" type="ColorRect" parent="Charlie"]
+offset_left = -10.0
+offset_top = 6.0
+offset_right = 10.0
+offset_bottom = 10.0
+color = Color(0, 0, 0, 0.2)
+
+[node name="Body" type="ColorRect" parent="Charlie"]
+offset_left = -10.0
+offset_top = -6.0
+offset_right = 10.0
+offset_bottom = 8.0
+color = Color(0.97, 0.94, 0.9, 1)
+
+[node name="Head" type="ColorRect" parent="Charlie"]
+offset_left = -8.0
+offset_top = -14.0
+offset_right = 8.0
+offset_bottom = -4.0
+color = Color(0.98, 0.95, 0.92, 1)
+
+[node name="EarL" type="ColorRect" parent="Charlie"]
+offset_left = -10.0
+offset_top = -12.0
+offset_right = -6.0
+offset_bottom = -5.0
+color = Color(0.92, 0.88, 0.82, 1)
+
+[node name="EarR" type="ColorRect" parent="Charlie"]
+offset_left = 6.0
+offset_top = -12.0
+offset_right = 10.0
+offset_bottom = -5.0
+color = Color(0.92, 0.88, 0.82, 1)
+
+[node name="Nose" type="ColorRect" parent="Charlie"]
+offset_left = -2.0
+offset_top = -9.0
+offset_right = 2.0
+offset_bottom = -6.0
+color = Color(0.15, 0.1, 0.1, 1)
+
+[node name="EyeL" type="ColorRect" parent="Charlie"]
+offset_left = -5.0
+offset_top = -12.0
+offset_right = -3.0
+offset_bottom = -10.0
+color = Color(0.1, 0.08, 0.08, 1)
+
+[node name="EyeR" type="ColorRect" parent="Charlie"]
+offset_left = 3.0
+offset_top = -12.0
+offset_right = 5.0
+offset_bottom = -10.0
+color = Color(0.1, 0.08, 0.08, 1)
+
+[node name="Tail" type="ColorRect" parent="Charlie"]
+offset_left = 8.0
+offset_top = -4.0
+offset_right = 14.0
+offset_bottom = 0.0
+color = Color(0.95, 0.92, 0.88, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Charlie"]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Charlie"]
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+limit_left = 0
+limit_top = 0
+limit_right = 426
+limit_bottom = 240
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("4_hud")
+
+[node name="MarginContainer" type="MarginContainer" parent="HUD"]
+offset_right = 120.0
+offset_bottom = 80.0
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="BondingLabel" type="Label" parent="HUD/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "Bonding"
+
+[node name="BondingBar" type="ProgressBar" parent="HUD/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(100, 8)
+layout_mode = 2
+value = 0.0
+show_percentage = false
+
+[node name="EntertainmentLabel" type="Label" parent="HUD/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "Entertainment"
+
+[node name="EntertainmentBar" type="ProgressBar" parent="HUD/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(100, 8)
+layout_mode = 2
+value = 0.0
+show_percentage = false
+
+[node name="TimeLabel" type="Label" parent="HUD/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "8:00 AM"
+
+[node name="InteractionPrompt" type="Label" parent="HUD"]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -60.0
+offset_top = -20.0
+offset_right = 60.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 12
+text = "[E] Interact"
+horizontal_alignment = 1
+
+[node name="MessagePanel" type="Panel" parent="HUD"]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_top = 30.0
+offset_right = 100.0
+offset_bottom = 60.0
+grow_horizontal = 2
+
+[node name="MessageLabel" type="Label" parent="HUD/MessagePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 3.0
+offset_right = -5.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 10
+text = "Message"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2

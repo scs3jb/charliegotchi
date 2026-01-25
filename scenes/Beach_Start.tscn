@@ -1,0 +1,545 @@
+[gd_scene load_steps=4 format=3 uid="uid://beach_start"]
+
+[ext_resource type="Script" path="res://scripts/scenes/BeachStart.gd" id="1_beach"]
+[ext_resource type="Script" path="res://scripts/player/Player.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/charlie/Charlie.gd" id="3_charlie"]
+
+[node name="BeachStart" type="Node2D"]
+script = ExtResource("1_beach")
+
+[node name="Sky" type="ColorRect" parent="."]
+offset_right = 426.0
+offset_bottom = 100.0
+color = Color(0.55, 0.7, 0.9, 1)
+
+[node name="SkyGradient" type="ColorRect" parent="."]
+offset_top = 80.0
+offset_right = 426.0
+offset_bottom = 100.0
+color = Color(0.65, 0.78, 0.92, 1)
+
+[node name="SandBase" type="ColorRect" parent="."]
+offset_top = 100.0
+offset_right = 426.0
+offset_bottom = 240.0
+color = Color(0.92, 0.85, 0.68, 1)
+
+[node name="SandTexture" type="Node2D" parent="."]
+position = Vector2(0, 100)
+
+[node name="Sand1" type="ColorRect" parent="SandTexture"]
+offset_left = 15.0
+offset_top = 20.0
+offset_right = 18.0
+offset_bottom = 22.0
+color = Color(0.88, 0.8, 0.6, 1)
+
+[node name="Sand2" type="ColorRect" parent="SandTexture"]
+offset_left = 45.0
+offset_top = 35.0
+offset_right = 47.0
+offset_bottom = 37.0
+color = Color(0.85, 0.78, 0.58, 1)
+
+[node name="Sand3" type="ColorRect" parent="SandTexture"]
+offset_left = 80.0
+offset_top = 15.0
+offset_right = 83.0
+offset_bottom = 17.0
+color = Color(0.9, 0.82, 0.62, 1)
+
+[node name="Sand4" type="ColorRect" parent="SandTexture"]
+offset_left = 120.0
+offset_top = 45.0
+offset_right = 122.0
+offset_bottom = 47.0
+color = Color(0.86, 0.79, 0.59, 1)
+
+[node name="Sand5" type="ColorRect" parent="SandTexture"]
+offset_left = 160.0
+offset_top = 25.0
+offset_right = 163.0
+offset_bottom = 28.0
+color = Color(0.89, 0.81, 0.61, 1)
+
+[node name="Sand6" type="ColorRect" parent="SandTexture"]
+offset_left = 200.0
+offset_top = 55.0
+offset_right = 202.0
+offset_bottom = 57.0
+color = Color(0.87, 0.8, 0.6, 1)
+
+[node name="Sand7" type="ColorRect" parent="SandTexture"]
+offset_left = 240.0
+offset_top = 30.0
+offset_right = 243.0
+offset_bottom = 32.0
+color = Color(0.85, 0.77, 0.57, 1)
+
+[node name="Sand8" type="ColorRect" parent="SandTexture"]
+offset_left = 280.0
+offset_top = 65.0
+offset_right = 282.0
+offset_bottom = 67.0
+color = Color(0.9, 0.83, 0.63, 1)
+
+[node name="Sand9" type="ColorRect" parent="SandTexture"]
+offset_left = 320.0
+offset_top = 40.0
+offset_right = 323.0
+offset_bottom = 43.0
+color = Color(0.88, 0.81, 0.61, 1)
+
+[node name="Sand10" type="ColorRect" parent="SandTexture"]
+offset_left = 360.0
+offset_top = 20.0
+offset_right = 362.0
+offset_bottom = 22.0
+color = Color(0.86, 0.78, 0.58, 1)
+
+[node name="Sand11" type="ColorRect" parent="SandTexture"]
+offset_left = 400.0
+offset_top = 50.0
+offset_right = 403.0
+offset_bottom = 52.0
+color = Color(0.89, 0.82, 0.62, 1)
+
+[node name="Sand12" type="ColorRect" parent="SandTexture"]
+offset_left = 30.0
+offset_top = 70.0
+offset_right = 32.0
+offset_bottom = 72.0
+color = Color(0.87, 0.79, 0.59, 1)
+
+[node name="Sand13" type="ColorRect" parent="SandTexture"]
+offset_left = 70.0
+offset_top = 85.0
+offset_right = 73.0
+offset_bottom = 87.0
+color = Color(0.85, 0.77, 0.57, 1)
+
+[node name="Sand14" type="ColorRect" parent="SandTexture"]
+offset_left = 110.0
+offset_top = 100.0
+offset_right = 112.0
+offset_bottom = 102.0
+color = Color(0.88, 0.8, 0.6, 1)
+
+[node name="Sand15" type="ColorRect" parent="SandTexture"]
+offset_left = 150.0
+offset_top = 75.0
+offset_right = 153.0
+offset_bottom = 78.0
+color = Color(0.86, 0.78, 0.58, 1)
+
+[node name="Sand16" type="ColorRect" parent="SandTexture"]
+offset_left = 190.0
+offset_top = 95.0
+offset_right = 192.0
+offset_bottom = 97.0
+color = Color(0.9, 0.83, 0.63, 1)
+
+[node name="Sand17" type="ColorRect" parent="SandTexture"]
+offset_left = 230.0
+offset_top = 110.0
+offset_right = 233.0
+offset_bottom = 112.0
+color = Color(0.87, 0.8, 0.6, 1)
+
+[node name="Sand18" type="ColorRect" parent="SandTexture"]
+offset_left = 270.0
+offset_top = 80.0
+offset_right = 272.0
+offset_bottom = 82.0
+color = Color(0.85, 0.77, 0.57, 1)
+
+[node name="Sand19" type="ColorRect" parent="SandTexture"]
+offset_left = 310.0
+offset_top = 105.0
+offset_right = 313.0
+offset_bottom = 108.0
+color = Color(0.89, 0.82, 0.62, 1)
+
+[node name="Sand20" type="ColorRect" parent="SandTexture"]
+offset_left = 350.0
+offset_top = 90.0
+offset_right = 352.0
+offset_bottom = 92.0
+color = Color(0.88, 0.81, 0.61, 1)
+
+[node name="Ocean" type="Node2D" parent="."]
+position = Vector2(0, 195)
+
+[node name="DeepWater" type="ColorRect" parent="Ocean"]
+offset_top = 15.0
+offset_right = 426.0
+offset_bottom = 45.0
+color = Color(0.2, 0.4, 0.6, 1)
+
+[node name="ShallowWater" type="ColorRect" parent="Ocean"]
+offset_right = 426.0
+offset_bottom = 18.0
+color = Color(0.35, 0.55, 0.75, 1)
+
+[node name="Foam" type="ColorRect" parent="Ocean"]
+offset_top = -3.0
+offset_right = 426.0
+offset_bottom = 2.0
+color = Color(0.85, 0.9, 0.95, 0.8)
+
+[node name="WetSand" type="ColorRect" parent="Ocean"]
+offset_top = -8.0
+offset_right = 426.0
+offset_bottom = -2.0
+color = Color(0.75, 0.68, 0.5, 1)
+
+[node name="Shells" type="Node2D" parent="."]
+
+[node name="Shell1" type="ColorRect" parent="Shells"]
+offset_left = 50.0
+offset_top = 160.0
+offset_right = 54.0
+offset_bottom = 163.0
+color = Color(0.95, 0.9, 0.85, 1)
+
+[node name="Shell2" type="ColorRect" parent="Shells"]
+offset_left = 150.0
+offset_top = 140.0
+offset_right = 153.0
+offset_bottom = 143.0
+color = Color(0.9, 0.85, 0.8, 1)
+
+[node name="Shell3" type="ColorRect" parent="Shells"]
+offset_left = 250.0
+offset_top = 175.0
+offset_right = 254.0
+offset_bottom = 178.0
+color = Color(0.92, 0.87, 0.82, 1)
+
+[node name="Shell4" type="ColorRect" parent="Shells"]
+offset_left = 380.0
+offset_top = 150.0
+offset_right = 383.0
+offset_bottom = 153.0
+color = Color(0.88, 0.83, 0.78, 1)
+
+[node name="Driftwood" type="ColorRect" parent="."]
+offset_left = 100.0
+offset_top = 165.0
+offset_right = 130.0
+offset_bottom = 170.0
+color = Color(0.45, 0.35, 0.25, 1)
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(80, 140)
+script = ExtResource("2_player")
+
+[node name="Body" type="ColorRect" parent="Player"]
+offset_left = -10.0
+offset_top = -5.0
+offset_right = 10.0
+offset_bottom = 14.0
+color = Color(0.95, 0.75, 0.8, 1)
+
+[node name="Head" type="ColorRect" parent="Player"]
+offset_left = -8.0
+offset_top = -16.0
+offset_right = 8.0
+offset_bottom = -4.0
+color = Color(1, 0.9, 0.8, 1)
+
+[node name="Hair" type="ColorRect" parent="Player"]
+offset_left = -9.0
+offset_top = -20.0
+offset_right = 9.0
+offset_bottom = -12.0
+color = Color(1, 0.85, 0.4, 1)
+
+[node name="HairSide" type="ColorRect" parent="Player"]
+offset_left = -10.0
+offset_top = -18.0
+offset_right = -7.0
+offset_bottom = -6.0
+color = Color(1, 0.85, 0.4, 1)
+
+[node name="EyeL" type="ColorRect" parent="Player"]
+offset_left = -5.0
+offset_top = -13.0
+offset_right = -3.0
+offset_bottom = -11.0
+color = Color(0.2, 0.4, 0.6, 1)
+
+[node name="EyeR" type="ColorRect" parent="Player"]
+offset_left = 3.0
+offset_top = -13.0
+offset_right = 5.0
+offset_bottom = -11.0
+color = Color(0.2, 0.4, 0.6, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Player"]
+
+[node name="InteractionArea" type="Area2D" parent="Player"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player/InteractionArea"]
+
+[node name="Box" type="StaticBody2D" parent="." groups=["interactable"]]
+position = Vector2(320, 165)
+
+[node name="Shadow" type="ColorRect" parent="Box"]
+offset_left = -22.0
+offset_top = 12.0
+offset_right = 26.0
+offset_bottom = 18.0
+color = Color(0.7, 0.63, 0.48, 0.5)
+
+[node name="BoxBack" type="ColorRect" parent="Box"]
+offset_left = -22.0
+offset_top = -14.0
+offset_right = 22.0
+offset_bottom = 14.0
+color = Color(0.5, 0.38, 0.25, 1)
+
+[node name="BoxFront" type="ColorRect" parent="Box"]
+offset_left = -20.0
+offset_top = -12.0
+offset_right = 20.0
+offset_bottom = 12.0
+color = Color(0.6, 0.45, 0.3, 1)
+
+[node name="BoxStripe" type="ColorRect" parent="Box"]
+offset_left = -20.0
+offset_top = -2.0
+offset_right = 20.0
+offset_bottom = 2.0
+color = Color(0.55, 0.42, 0.28, 1)
+
+[node name="BoxFlap1" type="ColorRect" parent="Box"]
+offset_left = -18.0
+offset_top = -18.0
+offset_right = -2.0
+offset_bottom = -12.0
+color = Color(0.55, 0.4, 0.26, 1)
+
+[node name="BoxFlap2" type="ColorRect" parent="Box"]
+offset_left = 2.0
+offset_top = -20.0
+offset_right = 18.0
+offset_bottom = -12.0
+color = Color(0.58, 0.43, 0.28, 1)
+
+[node name="QuestionMark" type="Label" parent="Box"]
+offset_left = -15.0
+offset_top = 16.0
+offset_right = 15.0
+offset_bottom = 32.0
+theme_override_font_sizes/font_size = 12
+text = "???"
+horizontal_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Box"]
+
+[node name="InteractionArea" type="Area2D" parent="Box" groups=["interactable"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Box/InteractionArea"]
+
+[node name="Charlie" type="CharacterBody2D" parent="."]
+visible = false
+position = Vector2(355, 160)
+script = ExtResource("3_charlie")
+
+[node name="Body" type="ColorRect" parent="Charlie"]
+offset_left = -10.0
+offset_top = -6.0
+offset_right = 10.0
+offset_bottom = 8.0
+color = Color(0.97, 0.94, 0.9, 1)
+
+[node name="Head" type="ColorRect" parent="Charlie"]
+offset_left = -8.0
+offset_top = -14.0
+offset_right = 8.0
+offset_bottom = -4.0
+color = Color(0.98, 0.95, 0.92, 1)
+
+[node name="EarL" type="ColorRect" parent="Charlie"]
+offset_left = -10.0
+offset_top = -12.0
+offset_right = -6.0
+offset_bottom = -5.0
+color = Color(0.92, 0.88, 0.82, 1)
+
+[node name="EarR" type="ColorRect" parent="Charlie"]
+offset_left = 6.0
+offset_top = -12.0
+offset_right = 10.0
+offset_bottom = -5.0
+color = Color(0.92, 0.88, 0.82, 1)
+
+[node name="Nose" type="ColorRect" parent="Charlie"]
+offset_left = -2.0
+offset_top = -9.0
+offset_right = 2.0
+offset_bottom = -6.0
+color = Color(0.15, 0.1, 0.1, 1)
+
+[node name="EyeL" type="ColorRect" parent="Charlie"]
+offset_left = -5.0
+offset_top = -12.0
+offset_right = -3.0
+offset_bottom = -10.0
+color = Color(0.1, 0.08, 0.08, 1)
+
+[node name="EyeR" type="ColorRect" parent="Charlie"]
+offset_left = 3.0
+offset_top = -12.0
+offset_right = 5.0
+offset_bottom = -10.0
+color = Color(0.1, 0.08, 0.08, 1)
+
+[node name="Tail" type="ColorRect" parent="Charlie"]
+offset_left = 8.0
+offset_top = -4.0
+offset_right = 14.0
+offset_bottom = 0.0
+color = Color(0.95, 0.92, 0.88, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Charlie"]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Charlie"]
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+limit_left = 0
+limit_top = 0
+limit_right = 426
+limit_bottom = 240
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="DialoguePanel" type="Panel" parent="CanvasLayer"]
+visible = false
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -55.0
+offset_right = -10.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="DialogueLabel" type="Label" parent="CanvasLayer/DialoguePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 5.0
+offset_right = -8.0
+offset_bottom = -15.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 10
+text = "Dialogue text here"
+autowrap_mode = 2
+
+[node name="ContinueLabel" type="Label" parent="CanvasLayer/DialoguePanel"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -70.0
+offset_top = -12.0
+offset_right = -5.0
+offset_bottom = -2.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 8
+text = "[E] Continue"
+horizontal_alignment = 2
+
+[node name="InteractionPrompt" type="Label" parent="CanvasLayer"]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -60.0
+offset_top = -18.0
+offset_right = 60.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 10
+text = "[E] Investigate"
+horizontal_alignment = 1
+
+[node name="FoodMiniGame" type="Control" parent="CanvasLayer"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="CanvasLayer/FoodMiniGame"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="Instructions" type="Label" parent="CanvasLayer/FoodMiniGame"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_top = 30.0
+offset_right = 100.0
+offset_bottom = 50.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 12
+text = "Click to coax Charlie out!"
+horizontal_alignment = 1
+
+[node name="FoodButton" type="Button" parent="CanvasLayer/FoodMiniGame"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -35.0
+offset_top = -25.0
+offset_right = 35.0
+offset_bottom = 25.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 14
+text = "Food"
+
+[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer/FoodMiniGame"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -70.0
+offset_top = 40.0
+offset_right = 70.0
+offset_bottom = 55.0
+grow_horizontal = 2
+grow_vertical = 2
+value = 0.0
+show_percentage = false
+
+[connection signal="pressed" from="CanvasLayer/FoodMiniGame/FoodButton" to="." method="_on_food_clicked"]
