@@ -13,6 +13,7 @@ extends Node2D
 var nearby_interactable: Node = null
 var ball_thrown: bool = false
 var original_ball_position: Vector2
+var waiting_for_ball_stop: bool = false
 
 func _ready() -> void:
 	# Set up Charlie
@@ -32,6 +33,19 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	_update_interaction_prompt()
+
+	# Check if ball stopped bouncing so Charlie can fetch
+	if waiting_for_ball_stop and "is_moving" in ball:
+		if not ball.is_moving:
+			waiting_for_ball_stop = false
+			charlie.fetch_ball(ball)
+
+	# Check for collision during keep-away - player can catch Charlie by touching
+	if charlie.has_ball and charlie.current_state == charlie.State.KEEP_AWAY:
+		var catch_distance = 25.0  # Close enough to grab Charlie
+		var dist = player.global_position.distance_to(charlie.global_position)
+		if dist < catch_distance:
+			_take_ball_from_charlie()
 
 func _update_interaction_prompt() -> void:
 	var player_pos = player.global_position
@@ -53,21 +67,21 @@ func _update_interaction_prompt() -> void:
 		closest_name = "[E] Pet Charlie"
 		nearby_interactable = pet_bed
 
-	# Check distance to ball
-	if not ball_thrown:
+	# Check distance to ball - can throw if ball is visible (not in Charlie's mouth)
+	if ball.visible:
 		dist = player_pos.distance_to(ball.global_position)
 		if dist < 40 and dist < closest_dist:
 			closest_dist = dist
 			closest_name = "[E] Throw Ball"
 			nearby_interactable = ball
-	else:
-		# Ball was thrown, check if we can take it from Charlie
-		if charlie.has_ball:
-			dist = player_pos.distance_to(charlie.global_position)
-			if dist < 40 and dist < closest_dist:
-				closest_dist = dist
-				closest_name = "[E] Take Ball"
-				nearby_interactable = charlie
+
+	# If Charlie has the ball, player can try to catch him
+	if charlie.has_ball:
+		dist = player_pos.distance_to(charlie.global_position)
+		if dist < 50 and dist < closest_dist:  # Slightly larger range to catch Charlie
+			closest_dist = dist
+			closest_name = "[E] Catch Charlie!"
+			nearby_interactable = charlie
 
 	# Check distance to door
 	dist = player_pos.distance_to(door.global_position)
@@ -126,34 +140,55 @@ func _pet_charlie() -> void:
 func _throw_ball() -> void:
 	ball_thrown = true
 
-	# Move ball to a random position
+	# Stop ball if it's currently moving
+	if ball.has_method("stop"):
+		ball.stop()
+
+	# Position ball at player before throwing
+	ball.global_position = player.global_position
+	ball.visible = true
+
+	# Interrupt Charlie if he was fetching
+	if charlie.current_state == charlie.State.FETCHING:
+		charlie.start_wandering()
+
+	# Throw ball with physics - it bounces around!
 	var throw_direction = player.facing_direction.normalized()
-	var throw_distance = randf_range(80, 150)
-	var target_pos = player.global_position + throw_direction * throw_distance
 
-	# Clamp to room bounds
-	target_pos.x = clampf(target_pos.x, 40, 360)
-	target_pos.y = clampf(target_pos.y, 40, 260)
-
-	ball.global_position = target_pos
-
-	# Tell Charlie to fetch
-	charlie.fetch_ball(ball)
-
-	hud.show_message("You threw the ball!", 1.5)
+	# If ball has throw method, use physics
+	if ball.has_method("throw"):
+		var throw_power = randf_range(280, 420)
+		ball.throw(throw_direction, throw_power)
+		waiting_for_ball_stop = true  # Wait for ball to stop before Charlie fetches
+		hud.show_message("You threw the ball!", 1.5)
+	else:
+		# Fallback: instant position (old behavior)
+		var throw_distance = randf_range(80, 150)
+		var target_pos = player.global_position + throw_direction * throw_distance
+		target_pos.x = clampf(target_pos.x, 40, 360)
+		target_pos.y = clampf(target_pos.y, 40, 200)
+		ball.global_position = target_pos
+		charlie.fetch_ball(ball)
+		hud.show_message("You threw the ball!", 1.5)
 
 func _take_ball_from_charlie() -> void:
 	if charlie.take_ball_from_charlie():
 		ball_thrown = false
 		ball.visible = true
-		ball.global_position = original_ball_position
+
+		# Place ball near player so they can throw again immediately
+		ball.global_position = player.global_position + Vector2(20, 0)
+
+		# Stop ball movement if it has the method
+		if ball.has_method("stop"):
+			ball.stop()
 
 		GameState.do_fetch_success()
 
 		if GameState.charlie_returns_ball:
 			hud.show_message("Charlie brought you the ball! Good boy!", 2.0)
 		else:
-			hud.show_message("You took the ball from Charlie.", 2.0)
+			hud.show_message("You caught Charlie and got the ball!", 2.0)
 
 		charlie.start_wandering()
 

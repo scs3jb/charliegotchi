@@ -349,62 +349,6 @@ visible = false
 position = Vector2(355, 160)
 script = ExtResource("3_charlie")
 
-[node name="Body" type="ColorRect" parent="Charlie"]
-offset_left = -10.0
-offset_top = -6.0
-offset_right = 10.0
-offset_bottom = 8.0
-color = Color(0.97, 0.94, 0.9, 1)
-
-[node name="Head" type="ColorRect" parent="Charlie"]
-offset_left = -8.0
-offset_top = -14.0
-offset_right = 8.0
-offset_bottom = -4.0
-color = Color(0.98, 0.95, 0.92, 1)
-
-[node name="EarL" type="ColorRect" parent="Charlie"]
-offset_left = -10.0
-offset_top = -12.0
-offset_right = -6.0
-offset_bottom = -5.0
-color = Color(0.92, 0.88, 0.82, 1)
-
-[node name="EarR" type="ColorRect" parent="Charlie"]
-offset_left = 6.0
-offset_top = -12.0
-offset_right = 10.0
-offset_bottom = -5.0
-color = Color(0.92, 0.88, 0.82, 1)
-
-[node name="Nose" type="ColorRect" parent="Charlie"]
-offset_left = -2.0
-offset_top = -9.0
-offset_right = 2.0
-offset_bottom = -6.0
-color = Color(0.15, 0.1, 0.1, 1)
-
-[node name="EyeL" type="ColorRect" parent="Charlie"]
-offset_left = -5.0
-offset_top = -12.0
-offset_right = -3.0
-offset_bottom = -10.0
-color = Color(0.1, 0.08, 0.08, 1)
-
-[node name="EyeR" type="ColorRect" parent="Charlie"]
-offset_left = 3.0
-offset_top = -12.0
-offset_right = 5.0
-offset_bottom = -10.0
-color = Color(0.1, 0.08, 0.08, 1)
-
-[node name="Tail" type="ColorRect" parent="Charlie"]
-offset_left = 8.0
-offset_top = -4.0
-offset_right = 14.0
-offset_bottom = 0.0
-color = Color(0.95, 0.92, 0.88, 1)
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Charlie"]
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Charlie"]

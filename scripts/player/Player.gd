@@ -5,7 +5,7 @@ class_name Player
 @export var speed: float = 80.0
 
 # References
-@onready var animation_player: AnimationPlayer = $AnimationPlayer
+var animated_sprite: AnimatedSprite2D = null
 @onready var interaction_area: Area2D = $InteractionArea
 
 # State
@@ -17,10 +17,13 @@ signal interact_pressed
 
 func _ready() -> void:
 	add_to_group("player")
+	# Get AnimatedSprite2D if it exists (some scenes use ColorRect placeholders)
+	animated_sprite = get_node_or_null("AnimatedSprite2D")
 
 func _physics_process(_delta: float) -> void:
 	if not can_move:
 		velocity = Vector2.ZERO
+		_update_animation(Vector2.ZERO)
 		return
 
 	# Get input direction
@@ -48,11 +51,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_try_interact()
 
 func _update_animation(movement: Vector2) -> void:
-	if not animation_player:
-		return
-
-	# Skip if no animations are defined
-	if animation_player.get_animation_list().is_empty():
+	if not animated_sprite:
 		return
 
 	var anim_name: String = ""
@@ -83,8 +82,9 @@ func _update_animation(movement: Vector2) -> void:
 				anim_name = "walk_up"
 
 	# Only play if animation exists
-	if animation_player.has_animation(anim_name):
-		animation_player.play(anim_name)
+	if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation(anim_name):
+		if animated_sprite.animation != anim_name:
+			animated_sprite.play(anim_name)
 
 func _try_interact() -> void:
 	emit_signal("interact_pressed")

@@ -1,9 +1,357 @@
-[gd_scene load_steps=5 format=3 uid="uid://overworld"]
+[gd_scene load_steps=55 format=3 uid="uid://overworld"]
 
 [ext_resource type="Script" path="res://scripts/scenes/Overworld.gd" id="1_overworld"]
 [ext_resource type="Script" path="res://scripts/player/Player.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/charlie/Charlie.gd" id="3_charlie"]
 [ext_resource type="Script" path="res://scripts/ui/HUD.gd" id="4_hud"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/player_spritesheet.png" id="5_player_sprite"]
+[ext_resource type="Texture2D" path="res://assets/sprites/characters/charlie_spritesheet.png" id="6_charlie_sprite"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
+size = Vector2(16, 12)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_interaction"]
+radius = 30.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_charlie"]
+size = Vector2(18, 12)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_house"]
+size = Vector2(100, 80)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_idle_down"]
+atlas = ExtResource("5_player_sprite")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_idle_left"]
+atlas = ExtResource("5_player_sprite")
+region = Rect2(0, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_idle_right"]
+atlas = ExtResource("5_player_sprite")
+region = Rect2(0, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_idle_up"]
+atlas = ExtResource("5_player_sprite")
+region = Rect2(0, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_down_1"]
+atlas = ExtResource("5_player_sprite")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_down_2"]
+atlas = ExtResource("5_player_sprite")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_down_3"]
+atlas = ExtResource("5_player_sprite")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_left_1"]
+atlas = ExtResource("5_player_sprite")
+region = Rect2(32, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_left_2"]
+atlas = ExtResource("5_player_sprite")
+region = Rect2(64, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_left_3"]
+atlas = ExtResource("5_player_sprite")
+region = Rect2(96, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_right_1"]
+atlas = ExtResource("5_player_sprite")
+region = Rect2(32, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_right_2"]
+atlas = ExtResource("5_player_sprite")
+region = Rect2(64, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_right_3"]
+atlas = ExtResource("5_player_sprite")
+region = Rect2(96, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_up_1"]
+atlas = ExtResource("5_player_sprite")
+region = Rect2(32, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_up_2"]
+atlas = ExtResource("5_player_sprite")
+region = Rect2(64, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_up_3"]
+atlas = ExtResource("5_player_sprite")
+region = Rect2(96, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_charlie_idle_down"]
+atlas = ExtResource("6_charlie_sprite")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_charlie_idle_left"]
+atlas = ExtResource("6_charlie_sprite")
+region = Rect2(0, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_charlie_idle_right"]
+atlas = ExtResource("6_charlie_sprite")
+region = Rect2(0, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_charlie_idle_up"]
+atlas = ExtResource("6_charlie_sprite")
+region = Rect2(0, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_charlie_walk_down_1"]
+atlas = ExtResource("6_charlie_sprite")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_charlie_walk_down_2"]
+atlas = ExtResource("6_charlie_sprite")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_charlie_walk_down_3"]
+atlas = ExtResource("6_charlie_sprite")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_charlie_walk_left_1"]
+atlas = ExtResource("6_charlie_sprite")
+region = Rect2(32, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_charlie_walk_left_2"]
+atlas = ExtResource("6_charlie_sprite")
+region = Rect2(64, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_charlie_walk_left_3"]
+atlas = ExtResource("6_charlie_sprite")
+region = Rect2(96, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_charlie_walk_right_1"]
+atlas = ExtResource("6_charlie_sprite")
+region = Rect2(32, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_charlie_walk_right_2"]
+atlas = ExtResource("6_charlie_sprite")
+region = Rect2(64, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_charlie_walk_right_3"]
+atlas = ExtResource("6_charlie_sprite")
+region = Rect2(96, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_charlie_walk_up_1"]
+atlas = ExtResource("6_charlie_sprite")
+region = Rect2(32, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_charlie_walk_up_2"]
+atlas = ExtResource("6_charlie_sprite")
+region = Rect2(64, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_charlie_walk_up_3"]
+atlas = ExtResource("6_charlie_sprite")
+region = Rect2(96, 96, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_player"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_idle_down")
+}],
+"loop": true,
+"name": &"idle_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_idle_left")
+}],
+"loop": true,
+"name": &"idle_left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_idle_right")
+}],
+"loop": true,
+"name": &"idle_right",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_idle_up")
+}],
+"loop": true,
+"name": &"idle_up",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_walk_down_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_walk_down_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_walk_down_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_walk_down_2")
+}],
+"loop": true,
+"name": &"walk_down",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_walk_left_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_walk_left_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_walk_left_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_walk_left_2")
+}],
+"loop": true,
+"name": &"walk_left",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_walk_right_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_walk_right_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_walk_right_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_walk_right_2")
+}],
+"loop": true,
+"name": &"walk_right",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_walk_up_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_walk_up_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_walk_up_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_walk_up_2")
+}],
+"loop": true,
+"name": &"walk_up",
+"speed": 10.0
+}]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_charlie"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_idle_down")
+}],
+"loop": true,
+"name": &"idle_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_idle_left")
+}],
+"loop": true,
+"name": &"idle_left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_idle_right")
+}],
+"loop": true,
+"name": &"idle_right",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_idle_up")
+}],
+"loop": true,
+"name": &"idle_up",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_walk_down_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_walk_down_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_walk_down_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_walk_down_2")
+}],
+"loop": true,
+"name": &"walk_down",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_walk_left_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_walk_left_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_walk_left_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_walk_left_2")
+}],
+"loop": true,
+"name": &"walk_left",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_walk_right_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_walk_right_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_walk_right_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_walk_right_2")
+}],
+"loop": true,
+"name": &"walk_right",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_walk_up_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_walk_up_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_walk_up_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_charlie_walk_up_2")
+}],
+"loop": true,
+"name": &"walk_up",
+"speed": 10.0
+}]
 
 [node name="Overworld" type="Node2D"]
 script = ExtResource("1_overworld")
@@ -29,6 +377,7 @@ color = Color(0.5, 0.4, 0.3, 1)
 
 [node name="House" type="Area2D" parent="." groups=["interactable"]]
 position = Vector2(213, 80)
+collision_layer = 32
 
 [node name="Sprite" type="ColorRect" parent="House"]
 offset_left = -50.0
@@ -60,6 +409,7 @@ text = "House"
 horizontal_alignment = 1
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="House"]
+shape = SubResource("RectangleShape2D_house")
 
 [node name="Trees" type="Node2D" parent="."]
 
@@ -111,36 +461,28 @@ collision_layer = 2
 collision_mask = 1
 script = ExtResource("2_player")
 
-[node name="Sprite2D" type="ColorRect" parent="Player"]
-offset_left = -12.0
-offset_top = -16.0
-offset_right = 12.0
-offset_bottom = 16.0
-color = Color(1, 0.85, 0.7, 1)
-
-[node name="Head" type="ColorRect" parent="Player/Sprite2D"]
-offset_left = 2.0
-offset_top = -10.0
-offset_right = 22.0
-offset_bottom = 6.0
-color = Color(1, 0.9, 0.8, 1)
-
-[node name="Hair" type="ColorRect" parent="Player/Sprite2D"]
-offset_left = 2.0
-offset_top = -14.0
-offset_right = 22.0
-offset_bottom = -6.0
-color = Color(1, 0.85, 0.4, 1)
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Player"]
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_player")
+animation = &"idle_down"
+autoplay = "idle_down"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="Player"]
+position = Vector2(0, 6)
+shape = SubResource("RectangleShape2D_player")
 
 [node name="InteractionArea" type="Area2D" parent="Player"]
 collision_layer = 0
 collision_mask = 32
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Player/InteractionArea"]
+shape = SubResource("CircleShape2D_interaction")
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+limit_left = 0
+limit_top = 0
+limit_right = 852
+limit_bottom = 480
 
 [node name="Charlie" type="CharacterBody2D" parent="."]
 position = Vector2(240, 175)
@@ -148,33 +490,19 @@ collision_layer = 4
 collision_mask = 1
 script = ExtResource("3_charlie")
 
-[node name="Sprite2D" type="ColorRect" parent="Charlie"]
-offset_left = -10.0
-offset_top = -8.0
-offset_right = 10.0
-offset_bottom = 8.0
-color = Color(0.95, 0.92, 0.88, 1)
-
-[node name="Face" type="ColorRect" parent="Charlie/Sprite2D"]
-offset_left = 6.0
-offset_top = -4.0
-offset_right = 14.0
-offset_bottom = 4.0
-color = Color(0.9, 0.85, 0.8, 1)
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Charlie"]
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_charlie")
+animation = &"idle_down"
+autoplay = "idle_down"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Charlie"]
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="Charlie"]
+position = Vector2(0, 4)
+shape = SubResource("RectangleShape2D_charlie")
 
 [node name="LeashLine" type="Line2D" parent="."]
 width = 2.0
 default_color = Color(0.4, 0.3, 0.2, 1)
-
-[node name="Camera2D" type="Camera2D" parent="Player"]
-limit_left = 0
-limit_top = 0
-limit_right = 852
-limit_bottom = 480
 
 [node name="AmbientLight" type="CanvasModulate" parent="."]
 color = Color(1, 1, 0.95, 1)

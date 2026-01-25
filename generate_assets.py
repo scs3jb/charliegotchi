@@ -85,148 +85,208 @@ COLORS = {
 
 
 def create_charlie_sprite(size=32):
-    """Create Charlie the baby Shih Tzu sprite"""
+    """Create Charlie the baby Shih Tzu sprite - cute and fluffy!"""
     img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
     # Scale factor
     s = size // 32
 
-    # Body (fluffy oval)
-    for y in range(12*s, 24*s):
-        for x in range(8*s, 24*s):
-            # Fluffy body shape
-            dx = (x - 16*s) / (8*s)
-            dy = (y - 18*s) / (6*s)
-            if dx*dx + dy*dy <= 1:
-                # Add fluffiness with noise
-                if random.random() > 0.3:
-                    if dy > 0.3:
-                        img.putpixel((x, y), COLORS['charlie_body_shadow'])
-                    else:
-                        img.putpixel((x, y), COLORS['charlie_body'])
+    # Colors for cuter appearance
+    cream = COLORS['charlie_body']
+    cream_shadow = COLORS['charlie_body_shadow']
+    cream_highlight = (255, 250, 245)
+    pink_inner_ear = (255, 210, 200)
+    nose_black = COLORS['charlie_nose']
+    eye_black = (30, 25, 25)
+    eye_shine = (255, 255, 255)
+    tongue_pink = COLORS['charlie_tongue']
+    outline = (180, 170, 160)
 
-    # Head (round fluffy)
-    for y in range(4*s, 16*s):
-        for x in range(6*s, 26*s):
-            dx = (x - 16*s) / (10*s)
-            dy = (y - 10*s) / (6*s)
-            if dx*dx + dy*dy <= 1:
-                if random.random() > 0.25:
-                    if dx < -0.3 or dy > 0.3:
-                        img.putpixel((x, y), COLORS['charlie_body_shadow'])
-                    else:
-                        img.putpixel((x, y), COLORS['charlie_body'])
+    # Fluffy body (solid base, then add texture)
+    draw.ellipse([9*s, 16*s, 23*s, 28*s], fill=cream)
+    draw.ellipse([10*s, 17*s, 22*s, 26*s], fill=cream_highlight)
+    draw.ellipse([9*s, 20*s, 23*s, 28*s], fill=cream_shadow)
 
-    # Ears (floppy)
-    for y in range(6*s, 14*s):
-        for x in range(2*s, 8*s):
-            dx = (x - 5*s) / (3*s)
-            dy = (y - 10*s) / (4*s)
-            if dx*dx + dy*dy <= 1:
-                if random.random() > 0.3:
-                    img.putpixel((x, y), COLORS['charlie_body_shadow'])
+    # Add fluffy texture to body edges
+    for i in range(8):
+        angle = i * 45
+        import math
+        bx = int(16*s + 7*s * math.cos(math.radians(angle + 180)))
+        by = int(22*s + 5*s * math.sin(math.radians(angle + 180)))
+        if 0 <= bx < size and 0 <= by < size:
+            draw.ellipse([bx-1*s, by-1*s, bx+2*s, by+2*s], fill=cream)
 
-    for y in range(6*s, 14*s):
-        for x in range(24*s, 30*s):
-            dx = (x - 27*s) / (3*s)
-            dy = (y - 10*s) / (4*s)
-            if dx*dx + dy*dy <= 1:
-                if random.random() > 0.3:
-                    img.putpixel((x, y), COLORS['charlie_body_shadow'])
+    # Floppy ears (behind head) - characteristic Shih Tzu floppy ears
+    # Left ear
+    draw.ellipse([2*s, 8*s, 10*s, 20*s], fill=cream_shadow)
+    draw.ellipse([3*s, 9*s, 9*s, 18*s], fill=cream)
+    draw.ellipse([4*s, 10*s, 8*s, 16*s], fill=pink_inner_ear)
+    # Ear fluff
+    for fy in range(12*s, 19*s, 2*s):
+        draw.ellipse([2*s, fy, 5*s, fy+3*s], fill=cream)
 
-    # Eyes (cute round)
-    draw.ellipse([10*s, 8*s, 14*s, 12*s], fill=COLORS['charlie_eye'])
-    draw.ellipse([18*s, 8*s, 22*s, 12*s], fill=COLORS['charlie_eye'])
-    # Eye highlights
-    draw.ellipse([11*s, 9*s, 12*s, 10*s], fill=(255, 255, 255))
-    draw.ellipse([19*s, 9*s, 20*s, 10*s], fill=(255, 255, 255))
+    # Right ear
+    draw.ellipse([22*s, 8*s, 30*s, 20*s], fill=cream_shadow)
+    draw.ellipse([23*s, 9*s, 29*s, 18*s], fill=cream)
+    draw.ellipse([24*s, 10*s, 28*s, 16*s], fill=pink_inner_ear)
+    # Ear fluff
+    for fy in range(12*s, 19*s, 2*s):
+        draw.ellipse([27*s, fy, 30*s, fy+3*s], fill=cream)
 
-    # Nose
-    draw.ellipse([14*s, 11*s, 18*s, 14*s], fill=COLORS['charlie_nose'])
+    # Big fluffy head (Shih Tzus have round fluffy faces)
+    draw.ellipse([6*s, 4*s, 26*s, 20*s], fill=cream)
+    draw.ellipse([7*s, 5*s, 25*s, 18*s], fill=cream_highlight)
+
+    # Forehead fluff (topknot - signature Shih Tzu feature)
+    draw.ellipse([10*s, 2*s, 22*s, 10*s], fill=cream)
+    draw.ellipse([12*s, 1*s, 20*s, 7*s], fill=cream_highlight)
+    # Little fluff tufts on top
+    draw.ellipse([13*s, 0*s, 16*s, 4*s], fill=cream)
+    draw.ellipse([16*s, 0*s, 19*s, 4*s], fill=cream)
+
+    # Cheek fluff
+    draw.ellipse([4*s, 10*s, 12*s, 18*s], fill=cream)
+    draw.ellipse([20*s, 10*s, 28*s, 18*s], fill=cream)
+
+    # Snout area (lighter, slightly protruding)
+    draw.ellipse([11*s, 12*s, 21*s, 19*s], fill=cream_highlight)
+
+    # BIG cute eyes (larger = cuter, Shih Tzus have big round eyes)
+    # Left eye
+    draw.ellipse([8*s, 8*s, 14*s, 14*s], fill=eye_black)
+    draw.ellipse([9*s, 9*s, 13*s, 13*s], fill=(50, 45, 45))  # Slight gradient
+    # Eye shine (multiple highlights for sparkle)
+    draw.ellipse([10*s, 9*s, 12*s, 11*s], fill=eye_shine)
+    draw.point((12*s, 12*s), fill=(200, 200, 200))  # Small secondary highlight
+
+    # Right eye
+    draw.ellipse([18*s, 8*s, 24*s, 14*s], fill=eye_black)
+    draw.ellipse([19*s, 9*s, 23*s, 13*s], fill=(50, 45, 45))
+    # Eye shine
+    draw.ellipse([20*s, 9*s, 22*s, 11*s], fill=eye_shine)
+    draw.point((22*s, 12*s), fill=(200, 200, 200))
+
+    # Cute button nose (heart-shaped for extra cuteness)
+    draw.ellipse([14*s, 13*s, 18*s, 16*s], fill=nose_black)
     # Nose highlight
-    draw.point((15*s, 12*s), fill=(80, 70, 70))
+    draw.ellipse([15*s, 13*s, 16*s, 14*s], fill=(80, 75, 75))
 
-    # Tiny tail (fluffy poof)
-    for y in range(16*s, 20*s):
-        for x in range(24*s, 28*s):
-            if random.random() > 0.4:
-                img.putpixel((x, y), COLORS['charlie_body'])
+    # Happy little mouth with tongue
+    draw.arc([13*s, 15*s, 16*s, 18*s], 0, 180, fill=outline, width=s)
+    draw.arc([16*s, 15*s, 19*s, 18*s], 0, 180, fill=outline, width=s)
+    # Little pink tongue poking out
+    draw.ellipse([15*s, 17*s, 17*s, 20*s], fill=tongue_pink)
+    draw.ellipse([15*s, 17*s, 17*s, 18*s], fill=(255, 180, 180))
 
-    # Tiny paws
-    draw.ellipse([10*s, 22*s, 14*s, 26*s], fill=COLORS['charlie_body_shadow'])
-    draw.ellipse([18*s, 22*s, 22*s, 26*s], fill=COLORS['charlie_body_shadow'])
+    # Tiny paws peeking out
+    draw.ellipse([10*s, 25*s, 14*s, 29*s], fill=cream)
+    draw.ellipse([18*s, 25*s, 22*s, 29*s], fill=cream)
+    # Paw pads (tiny pink dots)
+    draw.ellipse([11*s, 27*s, 13*s, 29*s], fill=pink_inner_ear)
+    draw.ellipse([19*s, 27*s, 21*s, 29*s], fill=pink_inner_ear)
+
+    # Fluffy tail (curled up - Shih Tzus have curled tails)
+    draw.ellipse([23*s, 18*s, 29*s, 24*s], fill=cream)
+    draw.ellipse([24*s, 17*s, 28*s, 21*s], fill=cream_highlight)
 
     return img
 
 
 def create_charlie_in_box(size=48):
-    """Create Charlie peeking out of cardboard box"""
+    """Create Charlie peeking out of cardboard box - adorable version!"""
     img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
     s = size // 48
 
+    # Colors
+    cream = COLORS['charlie_body']
+    cream_shadow = COLORS['charlie_body_shadow']
+    cream_highlight = (255, 250, 245)
+    pink_inner_ear = (255, 210, 200)
+    nose_black = COLORS['charlie_nose']
+    eye_black = (30, 25, 25)
+    eye_shine = (255, 255, 255)
+    tongue_pink = COLORS['charlie_tongue']
+
     # Box back
-    draw.rectangle([4*s, 20*s, 44*s, 44*s], fill=COLORS['cardboard_dark'])
+    draw.rectangle([4*s, 24*s, 44*s, 46*s], fill=COLORS['cardboard_dark'])
 
     # Box front
-    draw.rectangle([4*s, 28*s, 44*s, 44*s], fill=COLORS['cardboard'])
+    draw.rectangle([4*s, 30*s, 44*s, 46*s], fill=COLORS['cardboard'])
 
     # Box sides shading
-    draw.rectangle([4*s, 28*s, 8*s, 44*s], fill=COLORS['cardboard_dark'])
-    draw.rectangle([40*s, 28*s, 44*s, 44*s], fill=COLORS['cardboard_dark'])
+    draw.rectangle([4*s, 30*s, 8*s, 46*s], fill=COLORS['cardboard_dark'])
+    draw.rectangle([40*s, 30*s, 44*s, 46*s], fill=COLORS['cardboard_dark'])
 
     # Box flap left
-    points = [(4*s, 28*s), (8*s, 20*s), (16*s, 24*s), (12*s, 32*s)]
+    points = [(4*s, 30*s), (8*s, 24*s), (16*s, 26*s), (12*s, 32*s)]
     draw.polygon(points, fill=COLORS['cardboard_light'])
 
     # Box flap right
-    points = [(44*s, 28*s), (40*s, 20*s), (32*s, 24*s), (36*s, 32*s)]
+    points = [(44*s, 30*s), (40*s, 24*s), (32*s, 26*s), (36*s, 32*s)]
     draw.polygon(points, fill=COLORS['cardboard_light'])
 
-    # Charlie's head peeking out
-    # Head
-    for y in range(8*s, 28*s):
-        for x in range(12*s, 36*s):
-            dx = (x - 24*s) / (12*s)
-            dy = (y - 18*s) / (10*s)
-            if dx*dx + dy*dy <= 1:
-                if random.random() > 0.25:
-                    if dx < -0.3 or dy > 0.2:
-                        img.putpixel((x, y), COLORS['charlie_body_shadow'])
-                    else:
-                        img.putpixel((x, y), COLORS['charlie_body'])
+    # Floppy ears (behind head)
+    # Left ear - drooping down
+    draw.ellipse([6*s, 12*s, 16*s, 28*s], fill=cream_shadow)
+    draw.ellipse([7*s, 13*s, 15*s, 26*s], fill=cream)
+    draw.ellipse([8*s, 14*s, 14*s, 22*s], fill=pink_inner_ear)
 
-    # Ears
-    for y in range(10*s, 22*s):
-        for x in range(6*s, 14*s):
-            dx = (x - 10*s) / (4*s)
-            dy = (y - 16*s) / (6*s)
-            if dx*dx + dy*dy <= 1:
-                if random.random() > 0.3:
-                    img.putpixel((x, y), COLORS['charlie_body_shadow'])
+    # Right ear
+    draw.ellipse([32*s, 12*s, 42*s, 28*s], fill=cream_shadow)
+    draw.ellipse([33*s, 13*s, 41*s, 26*s], fill=cream)
+    draw.ellipse([34*s, 14*s, 40*s, 22*s], fill=pink_inner_ear)
 
-    for y in range(10*s, 22*s):
-        for x in range(34*s, 42*s):
-            dx = (x - 38*s) / (4*s)
-            dy = (y - 16*s) / (6*s)
-            if dx*dx + dy*dy <= 1:
-                if random.random() > 0.3:
-                    img.putpixel((x, y), COLORS['charlie_body_shadow'])
+    # Big fluffy head
+    draw.ellipse([12*s, 6*s, 36*s, 28*s], fill=cream)
+    draw.ellipse([14*s, 8*s, 34*s, 26*s], fill=cream_highlight)
 
-    # Eyes
-    draw.ellipse([17*s, 14*s, 22*s, 19*s], fill=COLORS['charlie_eye'])
-    draw.ellipse([26*s, 14*s, 31*s, 19*s], fill=COLORS['charlie_eye'])
-    draw.ellipse([18*s, 15*s, 20*s, 17*s], fill=(255, 255, 255))
-    draw.ellipse([27*s, 15*s, 29*s, 17*s], fill=(255, 255, 255))
+    # Forehead fluff (topknot)
+    draw.ellipse([16*s, 2*s, 32*s, 14*s], fill=cream)
+    draw.ellipse([18*s, 1*s, 30*s, 10*s], fill=cream_highlight)
+    # Tufts
+    draw.ellipse([19*s, 0*s, 24*s, 6*s], fill=cream)
+    draw.ellipse([24*s, 0*s, 29*s, 6*s], fill=cream)
 
-    # Nose
-    draw.ellipse([21*s, 19*s, 27*s, 24*s], fill=COLORS['charlie_nose'])
+    # Cheek fluff
+    draw.ellipse([10*s, 14*s, 20*s, 24*s], fill=cream)
+    draw.ellipse([28*s, 14*s, 38*s, 24*s], fill=cream)
 
-    # Paws on box edge
-    draw.ellipse([16*s, 26*s, 22*s, 32*s], fill=COLORS['charlie_body'])
-    draw.ellipse([26*s, 26*s, 32*s, 32*s], fill=COLORS['charlie_body'])
+    # Snout area
+    draw.ellipse([17*s, 16*s, 31*s, 26*s], fill=cream_highlight)
+
+    # BIG cute eyes
+    # Left eye
+    draw.ellipse([14*s, 12*s, 22*s, 20*s], fill=eye_black)
+    draw.ellipse([15*s, 13*s, 21*s, 19*s], fill=(50, 45, 45))
+    draw.ellipse([16*s, 13*s, 19*s, 16*s], fill=eye_shine)
+    draw.point((19*s, 17*s), fill=(200, 200, 200))
+
+    # Right eye
+    draw.ellipse([26*s, 12*s, 34*s, 20*s], fill=eye_black)
+    draw.ellipse([27*s, 13*s, 33*s, 19*s], fill=(50, 45, 45))
+    draw.ellipse([28*s, 13*s, 31*s, 16*s], fill=eye_shine)
+    draw.point((31*s, 17*s), fill=(200, 200, 200))
+
+    # Cute button nose
+    draw.ellipse([21*s, 18*s, 27*s, 23*s], fill=nose_black)
+    draw.ellipse([22*s, 18*s, 24*s, 20*s], fill=(80, 75, 75))
+
+    # Happy mouth with tongue
+    draw.arc([19*s, 21*s, 23*s, 26*s], 0, 180, fill=(180, 170, 160), width=s)
+    draw.arc([25*s, 21*s, 29*s, 26*s], 0, 180, fill=(180, 170, 160), width=s)
+    # Tongue
+    draw.ellipse([22*s, 24*s, 26*s, 29*s], fill=tongue_pink)
+    draw.ellipse([23*s, 24*s, 25*s, 26*s], fill=(255, 180, 180))
+
+    # Cute paws resting on box edge
+    draw.ellipse([14*s, 28*s, 22*s, 36*s], fill=cream)
+    draw.ellipse([26*s, 28*s, 34*s, 36*s], fill=cream)
+    # Paw pads
+    draw.ellipse([16*s, 32*s, 20*s, 36*s], fill=pink_inner_ear)
+    draw.ellipse([28*s, 32*s, 32*s, 36*s], fill=pink_inner_ear)
 
     return img
 
