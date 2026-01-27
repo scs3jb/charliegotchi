@@ -5,7 +5,7 @@ enum Season { SPRING, SUMMER, AUTUMN, WINTER }
 enum Weather { CLEAR, RAIN, SNOW, STORM, WINDY }
 
 # Time settings
-var time_scale: float = 60.0  # 1 real second = 1 game minute
+var time_scale: float = 15.0  # 1 real second = 0.25 game minutes (day lasts ~96 real minutes)
 var is_time_paused: bool = false
 
 # Current state
