@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://cutscene_intro"]
+[gd_scene load_steps=4 format=3 uid="uid://cutscene_intro"]
 
 [ext_resource type="Script" path="res://scripts/cutscenes/IntroCutscene.gd" id="1_intro"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/characters/charlie_sprite_frames.tres" id="2_charlie_frames"]
 
 [sub_resource type="Gradient" id="Gradient_rain"]
 colors = PackedColorArray(0.6, 0.7, 0.9, 0.8, 0.4, 0.5, 0.7, 0.0)
@@ -180,57 +181,11 @@ offset_right = 16.0
 offset_bottom = -10.0
 color = Color(0.52, 0.38, 0.24, 1)
 
-[node name="Charlie" type="Node2D" parent="Raft/Box"]
-position = Vector2(0, -4)
-
-[node name="Body" type="ColorRect" parent="Raft/Box/Charlie"]
-offset_left = -8.0
-offset_top = -6.0
-offset_right = 8.0
-offset_bottom = 6.0
-color = Color(0.95, 0.92, 0.88, 1)
-
-[node name="Head" type="ColorRect" parent="Raft/Box/Charlie"]
-offset_left = -6.0
-offset_top = -12.0
-offset_right = 6.0
-offset_bottom = -4.0
-color = Color(0.97, 0.94, 0.9, 1)
-
-[node name="EarL" type="ColorRect" parent="Raft/Box/Charlie"]
-offset_left = -8.0
-offset_top = -10.0
-offset_right = -5.0
-offset_bottom = -4.0
-color = Color(0.9, 0.85, 0.8, 1)
-
-[node name="EarR" type="ColorRect" parent="Raft/Box/Charlie"]
-offset_left = 5.0
-offset_top = -10.0
-offset_right = 8.0
-offset_bottom = -4.0
-color = Color(0.9, 0.85, 0.8, 1)
-
-[node name="Nose" type="ColorRect" parent="Raft/Box/Charlie"]
-offset_left = -2.0
-offset_top = -8.0
-offset_right = 2.0
-offset_bottom = -5.0
-color = Color(0.15, 0.1, 0.1, 1)
-
-[node name="EyeL" type="ColorRect" parent="Raft/Box/Charlie"]
-offset_left = -4.0
-offset_top = -11.0
-offset_right = -2.0
-offset_bottom = -9.0
-color = Color(0.1, 0.08, 0.08, 1)
-
-[node name="EyeR" type="ColorRect" parent="Raft/Box/Charlie"]
-offset_left = 2.0
-offset_top = -11.0
-offset_right = 4.0
-offset_bottom = -9.0
-color = Color(0.1, 0.08, 0.08, 1)
+[node name="Charlie" type="AnimatedSprite2D" parent="Raft/Box"]
+position = Vector2(0, -9)
+sprite_frames = ExtResource("2_charlie_frames")
+animation = &"idle_down"
+autoplay = "idle_down"
 
 [node name="RainHeavy" type="CPUParticles2D" parent="."]
 position = Vector2(213, -20)

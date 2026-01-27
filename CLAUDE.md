@@ -20,6 +20,13 @@ Built with Godot 4.x and GDScript.
 - Press F6 to run the currently open scene
 - Or right-click a scene in FileSystem and select "Run This Scene"
 
+### Automated Verification
+To verify the integrity of animations and scenes (headless mode):
+```bash
+godot -s scripts/verify_animations.gd --headless  # Checks Player.gd animation logic
+godot -s test_scenes.gd --headless            # Checks scene loading
+```
+
 ## Project Structure
 
 ```
@@ -33,174 +40,77 @@ charligotchi/
 │   ├── Overworld.tscn
 │   ├── Battle_Tutorial.tscn
 │   └── ui/
-│       └── UI_HUD.tscn
 ├── scripts/               # All .gd script files
 │   ├── autoload/          # Singleton scripts
-│   │   ├── GameState.gd
-│   │   └── TimeWeather.gd
 │   ├── player/
-│   │   └── Player.gd
+│   │   └── Player.gd      # Handles movement, pickup, and animation state
 │   ├── charlie/
-│   │   └── Charlie.gd
+│   │   └── Charlie.gd     # Handles AI states (follow, fetch, keep-away)
 │   └── ui/
-│       └── HUD.gd
 ├── assets/                # Art, audio, fonts
 │   ├── sprites/
-│   ├── audio/
-│   └── fonts/
+│   │   └── characters/
+│   │       ├── player_spritesheet.png  # Generated 128x416 sheet
+│   │       ├── charlie_spritesheet.png # Generated sheet
+│   │       └── ball_spritesheet.png
 └── resources/             # .tres resource files
+    └── sprites/
+        └── player_frames.tres # Maps animations to player_spritesheet.png
 ```
 
-## Development Phases
+## Dev Status: Pixel Art Integration
+ **(Updated 2026-01-27)**
 
-### Phase 0: Intro Cutscene (Non-Interactive)
-- [x] Create intro cutscene scene
-- [x] Storm animation with Charlie on raft
-- [x] Auto-transition to beach
+High-quality, retro-style pixel art is now generated procedurally using Python (PIL).
 
-### Phase 1: House and Bonding
-- [ ] Character customization (NOT YET IMPLEMENTED)
-- [x] Beach scene - find Charlie
-- [x] Food mini-game
-- [x] House interior
-- [x] Feed, pet, fetch mechanics
-- [x] Stats UI (Heart/Entertainment bars)
-- [x] Door unlock system
+### Generation Scripts
+Run these scripts to regenerate assets if needed (requires `pip install pillow`):
+- `python scripts/generate_player_extended.py`: Generates `player_spritesheet.png` (13 rows).
+- `python generate_charlie_spritesheet.py`: Generates `charlie_spritesheet.png`.
 
-### Phase 2: Outside with Lead
-- [x] Lead/harness system
-- [x] Outdoor navigation
-- [x] Leash behavior physics
-- [x] Day/night cycle
-- [x] Seasons
-- [x] Weather system
+### Sprite Sheet Layout (Player)
+The `player_spritesheet.png` (128x416) contains 13 rows, each with 4 frames (32x32):
+1.  **Idle Down** (Breathing)
+2.  **Bored** (Tapping foot)
+3.  **Confused** (Question mark)
+4.  **Walk Left**
+5.  **Walk Right**
+6.  **Walk Up**
+7.  **Walk Down**
+8.  **Pickup** (Bending down)
+9.  **Hold Idle** (Standing holding Charlie)
+10. **Hold Walk Left**
+11. **Hold Walk Right**
+12. **Hold Walk Up**
+13. **Hold Walk Down**
 
-### Overworld Features (PARTIALLY IMPLEMENTED)
-- [x] Day/night cycle
-- [x] Seasons
-- [x] Weather system
-- [ ] Sniffari mechanic
-- [ ] Poop pickup mini-game
+## Common Fixes & Troubleshooting
 
-### Wildlife Encounters (NOT YET IMPLEMENTED)
-- [ ] Tutorial battle screen
-- [ ] Animal AI
-- [ ] Charlie actions
+### Sprites Flickering / Wrong Animation
+If the player sprite flickers or shows the wrong frame:
+1.  **Check Resources**: Ensure `resources/sprites/player_frames.tres` has the animation defined.
+2.  **Clear Cache**: Sometimes imports get stuck. Run:
+    ```bash
+    rm -rf .godot/imported
+    ```
+    Then reopen Godot to force a reimport.
+3.  **Verify Logic**: Run `godot -s scripts/verify_animations.gd --headless` to check if `Player.gd` is requesting valid animations.
 
-### Sleep System (NOT YET IMPLEMENTED)
-- [ ] First sleep cutscene
-- [ ] Quick sleep unlock
+### "Identifier Not Found" Errors
+If loading scenes fails with "Identifier not found: GameState":
+- This usually happens in headless test scripts if Autoloads aren't initialized manually.
+- The game itself should run fine as `project.godot` handles Autoloads.
 
-## Current Status
+## Current Status (Playable)
 
-**CORE GAME LOOP IS PLAYABLE!**
+1.  **Start**: Intro cutscene -> Beach.
+2.  **Beach**: Find Charlie in the box.
+3.  **House**: Feed, pet, play fetch.
+    *   **New**: Pick up Charlie (Interact 'E') and walk him around.
+    *   **New**: Drop Charlie (Interact 'E' while holding).
+4.  **Overworld**: Explore with Charlie following.
 
-The game can be played from start through Phase 2:
-1. Main Menu -> New Game
-2. Intro cutscene (skippable)
-3. Beach scene - find Charlie in box, food mini-game
-4. House - feed, pet, play fetch to build bonding/entertainment
-5. When both stats are 100%, door unlocks
-6. Overworld - explore outside with Charlie on leash
-
-### Validation Status (Tested 2026-01-24)
-- All scenes load without errors
-- Game runs at 165 FPS (Godot 4.5.1)
-- Autoload singletons initialize correctly
-- Scene transitions configured correctly
-
-### Known Issues / Missing Features
-- No collision shapes on characters (need to add in editor)
-- Character customization not implemented
-- Wildlife encounters not implemented
-- Sleep system not implemented
-- Sniffari/poop mechanics not implemented
-- No audio
-
-## Art Assets
-
-### Generated Pixel Art (2026-01-25)
-All sprites generated using PIL/Pillow with Link to the Past-inspired pixel art style.
-
-**Characters:**
-- `charlie.png` (32x32) - Baby Shih Tzu puppy sprite
-- `charlie_large.png` (48x48) - Larger version for close-ups
-- `charlie_in_box.png` (48x48) - Charlie peeking from cardboard box
-- `charlie_in_box_large.png` (64x64) - Large version for intro scene
-- `player.png` (32x32) - Blonde girl player character
-- `player_large.png` (48x48) - Larger version
-
-**Environment - Storm Scene:**
-- `storm_sky.png` (426x160) - Dramatic dark stormy sky with layered clouds
-- `storm_ocean.png` (426x120) - Turbulent ocean with rolling waves and foam
-
-**Environment - Beach Scene:**
-- `beach_sand.png` (426x140) - Detailed sandy beach with grain texture, shells, driftwood, and wet sand gradient
-- `beach_ocean.png` (426x80) - Calm beach ocean with gentle waves
-
-**Props:**
-- `raft_large.png` (96x96) - Wooden log raft with rope bindings
-- `raft.png` (64x64) - Smaller raft version
-- `box_closed.png` (40x40) - Cardboard box prop
-- `driftwood.png` (48x16) - Beach driftwood
-- `shell.png` (12x12) - Seashell decoration
-
-**Effects:**
-- `lightning.png` (80x160) - Forked lightning bolt with glow effect
-- `rain.png` (64x64) - Rain particle sheet
-- `wind_line.png` (100x16) - Horizontal wind streak effect
-- `spray.png` (16x16) - Ocean spray particle
-
-### Regenerating Assets
-Run the asset generation scripts:
-```bash
-python generate_assets.py           # Base character/environment assets
-python generate_enhanced_assets.py  # Enhanced storm and beach textures
-```
-Requires: `pip install pillow`
-
-## Controls
-
-| Action | Keyboard | Touch |
-|--------|----------|-------|
-| Move | WASD / Arrow Keys | Virtual Joystick |
-| Interact | E / Space | Tap |
-| Open Menu | Escape | Menu Button |
-
-## Creating Assets
-
-### Sprites
-- Use 16x16 or 32x32 pixel art for characters
-- Link to the Past style: outlined sprites, vibrant colors
-- Charlie: Small white/cream Shih Tzu puppy
-- Player: Blonde girl with simple outfit
-
-### Importing Sprites
-1. Drag PNG files into `assets/sprites/` folder
-2. Select sprite in FileSystem
-3. In Import tab: Filter = Off (for pixel art)
-4. Click "Reimport"
-
-## Common Fixes
-
-### Sprites Look Blurry
-- Select sprite → Import tab → Filter: Off → Reimport
-
-### Character Falls Through Floor
-- Add CollisionShape2D to both character and floor
-- Set proper collision layers/masks
-
-### Scene Won't Load
-- Check for circular dependencies
-- Verify all referenced resources exist
-
-## Prompts for Future Sessions
-
-### To continue development:
-"Continue building Charlie's Island Adventure. Check CLAUDE.md for current progress and pick up where we left off."
-
-### To add a specific feature:
-"Add the [FEATURE NAME] to Charlie's Island Adventure following the spec in charlie-island-adventure-spec.md"
-
-### To fix a bug:
-"There's a bug in [SCENE/SCRIPT]: [DESCRIPTION]. Please fix it."
+### Pending Features
+- Wildlife encounters
+- Sleep system
+- Sniffari mechanics

@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://beach_start"]
+[gd_scene load_steps=5 format=3 uid="uid://beach_start"]
 
 [ext_resource type="Script" path="res://scripts/scenes/BeachStart.gd" id="1_beach"]
 [ext_resource type="Script" path="res://scripts/player/Player.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/charlie/Charlie.gd" id="3_charlie"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/characters/charlie_sprite_frames.tres" id="4_charlie_frames"]
 
 [node name="BeachStart" type="Node2D"]
 script = ExtResource("1_beach")
@@ -350,6 +351,12 @@ position = Vector2(355, 160)
 script = ExtResource("3_charlie")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Charlie"]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Charlie"]
+texture_filter = 1
+sprite_frames = ExtResource("4_charlie_frames")
+animation = &"idle_down"
+autoplay = "idle_down"
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Charlie"]
 

@@ -11,6 +11,8 @@ var animated_sprite: AnimatedSprite2D = null
 # State
 var can_move: bool = true
 var facing_direction: Vector2 = Vector2.DOWN
+var held_object: Node2D = null
+var is_picking_up: bool = false
 var nearby_interactable: Node = null
 
 signal interact_pressed
@@ -21,9 +23,10 @@ func _ready() -> void:
 	animated_sprite = get_node_or_null("AnimatedSprite2D")
 
 func _physics_process(_delta: float) -> void:
-	if not can_move:
+	if not can_move or is_picking_up:
 		velocity = Vector2.ZERO
-		_update_animation(Vector2.ZERO)
+		if not is_picking_up:
+			_update_animation(Vector2.ZERO)
 		return
 
 	# Get input direction
@@ -48,7 +51,10 @@ func _physics_process(_delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact"):
-		_try_interact()
+		if held_object:
+			drop()
+		else:
+			_try_interact()
 
 func _update_animation(movement: Vector2) -> void:
 	if not animated_sprite:
@@ -81,6 +87,13 @@ func _update_animation(movement: Vector2) -> void:
 			else:
 				anim_name = "walk_up"
 
+	if held_object:
+		anim_name = "hold_" + anim_name
+
+	# Safegaurd: if picking up, don't interrupt
+	if is_picking_up:
+		return
+
 	# Only play if animation exists
 	if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation(anim_name):
 		if animated_sprite.animation != anim_name:
@@ -91,6 +104,47 @@ func _try_interact() -> void:
 
 	if nearby_interactable and nearby_interactable.has_method("interact"):
 		nearby_interactable.interact(self)
+
+func pickup(target: Node2D) -> void:
+	if held_object or is_picking_up:
+		return
+	
+	is_picking_up = true
+	can_move = false
+	
+	# Play pickup animation
+	if animated_sprite.sprite_frames.has_animation("pickup"):
+		animated_sprite.play("pickup")
+		
+		# Wait for close to end of animation frame to visually "grab"
+		# Or just wait for animation_finished. 
+		# For simplicity, we can yield to animation_finished
+		if not animated_sprite.is_connected("animation_finished", _on_pickup_finished):
+			animated_sprite.connect("animation_finished", _on_pickup_finished.bind(target), CONNECT_ONE_SHOT)
+	else:
+		# Fallback if no animation
+		_on_pickup_finished(target)
+
+func _on_pickup_finished(target: Node2D = null) -> void:
+	is_picking_up = false
+	can_move = true
+	held_object = target
+	
+	# Notify target it's been picked up
+	if target and target.has_method("get_picked_up"):
+		target.get_picked_up()
+
+func drop() -> void:
+	if not held_object:
+		return
+		
+	# Determine drop position (in front of player)
+	var drop_pos = global_position + facing_direction * 20.0
+	
+	if held_object.has_method("get_dropped"):
+		held_object.get_dropped(drop_pos)
+	
+	held_object = null
 
 func set_can_move(value: bool) -> void:
 	can_move = value

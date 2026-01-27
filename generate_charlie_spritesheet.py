@@ -41,6 +41,12 @@ BALL_DARK = (180, 45, 45)
 # Outline for definition
 OUTLINE = (195, 185, 170)
 
+# New Items
+BONE_WHITE = (245, 245, 240)
+BONE_SHADOW = (220, 220, 215)
+DRUMSTICK_SKIN = (210, 140, 60)
+DRUMSTICK_BONE = (230, 220, 210)
+
 
 def draw_fluffy_edge(draw, cx, cy, radius, color, num_tufts=12):
     """Draw fluffy fur tufts around an edge"""
@@ -102,13 +108,14 @@ def draw_shih_tzu_nose(draw, cx, cy, width, height):
     draw.ellipse([cx - width*0.35, cy - height*0.35, cx + width*0.1, cy], fill=NOSE_HIGHLIGHT)
 
 
-def draw_charlie_frame(size=128, direction="down", frame=0, has_ball=False, mouth_open=True):
+def draw_charlie_frame(size=128, direction="down", frame=0, holding_item=None, mouth_open=True, emotion="happy"):
     """
     Draw a single frame of Charlie the Shih Tzu
     direction: "down", "up", "left", "right"
     frame: animation frame (0-3 for walk cycle)
-    has_ball: whether Charlie is holding a ball
+    holding_item: None, "ball", "bone", "drumstick"
     mouth_open: for panting animation
+    emotion: "happy", "bored", "confused"
     """
     img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
@@ -191,20 +198,40 @@ def draw_charlie_frame(size=128, direction="down", frame=0, has_ball=False, mout
 
         # EYES (big, round, sparkly)
         eye_y = int(head_y - 4*s)
-        draw_shih_tzu_eye(draw, int(48*s), eye_y, int(10*s))
-        draw_shih_tzu_eye(draw, int(80*s), eye_y, int(10*s))
+        
+        if emotion == "bored":
+            # Bored eyes (half lids)
+            draw_shih_tzu_eye(draw, int(48*s), eye_y, int(10*s))
+            draw_shih_tzu_eye(draw, int(80*s), eye_y, int(10*s))
+            # Eyelids
+            draw.chord([int(38*s), eye_y - int(10*s), int(58*s), eye_y + int(10*s)], 180, 0, fill=CREAM)
+            draw.chord([int(70*s), eye_y - int(10*s), int(90*s), eye_y + int(10*s)], 180, 0, fill=CREAM)
+            draw.arc([int(38*s), eye_y - int(10*s), int(58*s), eye_y + int(10*s)], 180, 360, fill=OUTLINE, width=1)
+            draw.arc([int(70*s), eye_y - int(10*s), int(90*s), eye_y + int(10*s)], 180, 360, fill=OUTLINE, width=1)
+        elif emotion == "confused":
+            # Confused (one eyebrow raised, slight tilt indicated by eye position/shape)
+            draw_shih_tzu_eye(draw, int(48*s), eye_y - int(2*s), int(10*s)) # Left eye slightly up
+            draw_shih_tzu_eye(draw, int(80*s), eye_y + int(2*s), int(11*s)) # Right eye wider
+        else:
+            draw_shih_tzu_eye(draw, int(48*s), eye_y, int(10*s))
+            draw_shih_tzu_eye(draw, int(80*s), eye_y, int(10*s))
 
         # EYEBROWS (fur tufts)
-        draw.ellipse([int(40*s), eye_y - int(14*s), int(56*s), eye_y - int(6*s)], fill=CREAM)
-        draw.ellipse([int(72*s), eye_y - int(14*s), int(88*s), eye_y - int(6*s)], fill=CREAM)
+        if emotion == "confused":
+             draw.ellipse([int(40*s), eye_y - int(20*s), int(56*s), eye_y - int(12*s)], fill=CREAM) # Raised
+             draw.ellipse([int(72*s), eye_y - int(12*s), int(88*s), eye_y - int(4*s)], fill=CREAM)  # Lowered
+        else:
+             draw.ellipse([int(40*s), eye_y - int(14*s), int(56*s), eye_y - int(6*s)], fill=CREAM)
+             draw.ellipse([int(72*s), eye_y - int(14*s), int(88*s), eye_y - int(6*s)], fill=CREAM)
 
         # BLUSH
-        blush_img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
-        blush_draw = ImageDraw.Draw(blush_img)
-        blush_draw.ellipse([int(28*s), int(head_y + 4*s), int(44*s), int(head_y + 14*s)], fill=PINK_BLUSH)
-        blush_draw.ellipse([int(84*s), int(head_y + 4*s), int(100*s), int(head_y + 14*s)], fill=PINK_BLUSH)
-        img = Image.alpha_composite(img, blush_img)
-        draw = ImageDraw.Draw(img)
+        if emotion == "happy":
+            blush_img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+            blush_draw = ImageDraw.Draw(blush_img)
+            blush_draw.ellipse([int(28*s), int(head_y + 4*s), int(44*s), int(head_y + 14*s)], fill=PINK_BLUSH)
+            blush_draw.ellipse([int(84*s), int(head_y + 4*s), int(100*s), int(head_y + 14*s)], fill=PINK_BLUSH)
+            img = Image.alpha_composite(img, blush_img)
+            draw = ImageDraw.Draw(img)
 
         # NOSE
         nose_y = int(head_y + 10*s)
@@ -212,13 +239,36 @@ def draw_charlie_frame(size=128, direction="down", frame=0, has_ball=False, mout
 
         # MOUTH
         mouth_y = int(nose_y + 8*s)
-        if has_ball:
-            # Ball in mouth
+        if holding_item:
+            # Item in mouth
             ball_y = int(mouth_y + 6*s)
-            draw.ellipse([int(52*s), ball_y - int(10*s), int(76*s), ball_y + int(10*s)], fill=BALL_RED)
-            draw.ellipse([int(56*s), ball_y - int(7*s), int(66*s), ball_y - int(1*s)], fill=BALL_LIGHT)
-            draw.ellipse([int(62*s), ball_y + int(3*s), int(72*s), ball_y + int(8*s)], fill=BALL_DARK)
-        elif mouth_open:
+            
+            if holding_item == "ball":
+                draw.ellipse([int(52*s), ball_y - int(10*s), int(76*s), ball_y + int(10*s)], fill=BALL_RED)
+                draw.ellipse([int(56*s), ball_y - int(7*s), int(66*s), ball_y - int(1*s)], fill=BALL_LIGHT)
+                draw.ellipse([int(62*s), ball_y + int(3*s), int(72*s), ball_y + int(8*s)], fill=BALL_DARK)
+            elif holding_item == "bone":
+                # Draw bone shape
+                bx, by = int(64*s), ball_y
+                bw, bh = int(24*s), int(8*s)
+                draw.rectangle([bx - bw//2, by - bh//2, bx + bw//2, by + bh//2], fill=BONE_WHITE)
+                # Knobs
+                knob_r = int(6*s)
+                draw.ellipse([bx - bw//2 - knob_r, by - bh, bx - bw//2 + knob_r, by], fill=BONE_WHITE)
+                draw.ellipse([bx - bw//2 - knob_r, by, bx - bw//2 + knob_r, by + bh], fill=BONE_WHITE)
+                draw.ellipse([bx + bw//2 - knob_r, by - bh, bx + bw//2 + knob_r, by], fill=BONE_WHITE)
+                draw.ellipse([bx + bw//2 - knob_r, by, bx + bw//2 + knob_r, by + bh], fill=BONE_WHITE)
+                
+            elif holding_item == "drumstick":
+                # Drumstick shape
+                dx, dy = int(64*s), ball_y
+                # Meat
+                draw.ellipse([dx - int(10*s), dy - int(10*s), dx + int(10*s), dy + int(14*s)], fill=DRUMSTICK_SKIN)
+                # Bone
+                draw.rectangle([dx - int(4*s), dy - int(18*s), dx + int(4*s), dy], fill=DRUMSTICK_BONE)
+                draw.ellipse([dx - int(6*s), dy - int(20*s), dx + int(6*s), dy - int(14*s)], fill=DRUMSTICK_BONE)
+
+        elif mouth_open and emotion == "happy":
             # Happy panting mouth
             draw.arc([int(52*s), mouth_y - int(6*s), int(64*s), mouth_y + int(4*s)], 0, 180, fill=OUTLINE, width=int(2*s))
             draw.arc([int(64*s), mouth_y - int(6*s), int(76*s), mouth_y + int(4*s)], 0, 180, fill=OUTLINE, width=int(2*s))
@@ -226,6 +276,13 @@ def draw_charlie_frame(size=128, direction="down", frame=0, has_ball=False, mout
             tongue_y = int(mouth_y + 5*s)
             draw.ellipse([int(58*s), tongue_y - int(3*s), int(70*s), tongue_y + int(10*s)], fill=PINK_TONGUE)
             draw.ellipse([int(60*s), tongue_y - int(3*s), int(68*s), tongue_y + int(3*s)], fill=PINK_TONGUE_LIGHT)
+        elif emotion == "bored":
+             # Flat line mouth
+             draw.line([int(58*s), mouth_y, int(70*s), mouth_y], fill=OUTLINE, width=int(2*s))
+        elif emotion == "confused":
+             # Small squiggly mouth
+             draw.arc([int(58*s), mouth_y - int(2*s), int(64*s), mouth_y + int(2*s)], 0, 180, fill=OUTLINE, width=int(2*s))
+             draw.arc([int(64*s), mouth_y, int(70*s), mouth_y + int(4*s)], 180, 0, fill=OUTLINE, width=int(2*s))
         else:
             # Closed smile
             draw.arc([int(52*s), mouth_y - int(6*s), int(64*s), mouth_y + int(2*s)], 0, 180, fill=OUTLINE, width=int(2*s))
@@ -339,11 +396,20 @@ def draw_charlie_frame(size=128, direction="down", frame=0, has_ball=False, mout
 
         # MOUTH
         mouth_y = int(snout_y + 10*s)
-        if has_ball:
+        if holding_item:
             ball_x = int(snout_x - 2*s)
-            draw.ellipse([ball_x - int(10*s), mouth_y - int(6*s), ball_x + int(10*s), mouth_y + int(14*s)], fill=BALL_RED)
-            draw.ellipse([ball_x - int(7*s), mouth_y - int(3*s), ball_x + int(1*s), mouth_y + int(3*s)], fill=BALL_LIGHT)
-        elif mouth_open:
+            if holding_item == "ball":
+                draw.ellipse([ball_x - int(10*s), mouth_y - int(6*s), ball_x + int(10*s), mouth_y + int(14*s)], fill=BALL_RED)
+                draw.ellipse([ball_x - int(7*s), mouth_y - int(3*s), ball_x + int(1*s), mouth_y + int(3*s)], fill=BALL_LIGHT)
+            elif holding_item == "bone":
+                 draw.rectangle([ball_x - int(8*s), mouth_y - int(2*s), ball_x + int(12*s), mouth_y + int(4*s)], fill=BONE_WHITE)
+                 draw.ellipse([ball_x - int(12*s), mouth_y - int(4*s), ball_x - int(4*s), mouth_y + int(6*s)], fill=BONE_WHITE)
+                 draw.ellipse([ball_x + int(8*s), mouth_y - int(4*s), ball_x + int(16*s), mouth_y + int(6*s)], fill=BONE_WHITE)
+            elif holding_item == "drumstick":
+                 draw.ellipse([ball_x - int(8*s), mouth_y - int(4*s), ball_x + int(4*s), mouth_y + int(10*s)], fill=DRUMSTICK_SKIN)
+                 draw.rectangle([ball_x + int(2*s), mouth_y, ball_x + int(14*s), mouth_y + int(4*s)], fill=DRUMSTICK_BONE)
+
+        elif mouth_open and emotion == "happy":
             draw.arc([snout_x - int(8*s), mouth_y - int(6*s), snout_x + int(4*s), mouth_y + int(4*s)], 0, 180, fill=OUTLINE, width=int(2*s))
             draw.ellipse([snout_x - int(4*s), mouth_y + int(1*s), snout_x + int(4*s), mouth_y + int(10*s)], fill=PINK_TONGUE)
 
@@ -411,11 +477,20 @@ def draw_charlie_frame(size=128, direction="down", frame=0, has_ball=False, mout
 
         # MOUTH
         mouth_y = int(snout_y + 10*s)
-        if has_ball:
+        if holding_item:
             ball_x = int(snout_x + 2*s)
-            draw.ellipse([ball_x - int(10*s), mouth_y - int(6*s), ball_x + int(10*s), mouth_y + int(14*s)], fill=BALL_RED)
-            draw.ellipse([ball_x - int(1*s), mouth_y - int(3*s), ball_x + int(7*s), mouth_y + int(3*s)], fill=BALL_LIGHT)
-        elif mouth_open:
+            if holding_item == "ball":
+                draw.ellipse([ball_x - int(10*s), mouth_y - int(6*s), ball_x + int(10*s), mouth_y + int(14*s)], fill=BALL_RED)
+                draw.ellipse([ball_x - int(1*s), mouth_y - int(3*s), ball_x + int(7*s), mouth_y + int(3*s)], fill=BALL_LIGHT)
+            elif holding_item == "bone":
+                 draw.rectangle([ball_x - int(12*s), mouth_y - int(2*s), ball_x + int(8*s), mouth_y + int(4*s)], fill=BONE_WHITE)
+                 draw.ellipse([ball_x - int(16*s), mouth_y - int(4*s), ball_x - int(8*s), mouth_y + int(6*s)], fill=BONE_WHITE)
+                 draw.ellipse([ball_x + int(4*s), mouth_y - int(4*s), ball_x + int(12*s), mouth_y + int(6*s)], fill=BONE_WHITE)
+            elif holding_item == "drumstick":
+                 draw.ellipse([ball_x - int(4*s), mouth_y - int(4*s), ball_x + int(8*s), mouth_y + int(10*s)], fill=DRUMSTICK_SKIN)
+                 draw.rectangle([ball_x - int(14*s), mouth_y, ball_x - int(2*s), mouth_y + int(4*s)], fill=DRUMSTICK_BONE)
+
+        elif mouth_open and emotion == "happy":
             draw.arc([snout_x - int(4*s), mouth_y - int(6*s), snout_x + int(8*s), mouth_y + int(4*s)], 0, 180, fill=OUTLINE, width=int(2*s))
             draw.ellipse([snout_x - int(4*s), mouth_y + int(1*s), snout_x + int(4*s), mouth_y + int(10*s)], fill=PINK_TONGUE)
 
@@ -443,31 +518,52 @@ def create_charlie_spritesheet(frame_size=128):
     # Row 10: walk_left_ball (4 frames)
     # Row 11: walk_right_ball (4 frames)
 
-    rows = 12
-    cols = 4
 
-    sheet = Image.new('RGBA', (frame_size * cols, frame_size * rows), (0, 0, 0, 0))
 
     animations = [
-        ("down", False, False),   # Row 0
-        ("up", False, False),     # Row 1
-        ("left", False, False),   # Row 2
-        ("right", False, False),  # Row 3
-        ("down", True, False),    # Row 4
-        ("up", True, False),      # Row 5
-        ("left", True, False),    # Row 6
-        ("right", True, False),   # Row 7
-        ("down", False, True),    # Row 8
-        ("down", True, True),     # Row 9
-        ("left", True, True),     # Row 10
-        ("right", True, True),    # Row 11
-    ]
+        # Idle / Emotion
+        ("down", False, None, "happy"),     # Row 0: Stand/Breathing
+        ("down", False, None, "bored"),     # Row 1: Bored
+        ("down", False, None, "confused"),  # Row 2: Confused
+        
+        # Walking
+        ("left", True, None, "happy"),      # Row 3: Walk Left
+        ("right", True, None, "happy"),     # Row 4: Walk Right
+        ("up", True, None, "happy"),        # Row 5: Walk Up
+        ("down", True, None, "happy"),      # Row 6: Walk Down
 
-    for row, (direction, is_walk, has_ball) in enumerate(animations):
+        # Walking with Ball
+        ("left", True, "ball", "happy"),    # Row 7
+        ("right", True, "ball", "happy"),   # Row 8
+        ("up", True, "ball", "happy"),      # Row 9
+        ("down", True, "ball", "happy"),    # Row 10
+        
+        # Walking with Bone
+        ("left", True, "bone", "happy"),    # Row 11
+        ("right", True, "bone", "happy"),   # Row 12
+        ("up", True, "bone", "happy"),      # Row 13
+        ("down", True, "bone", "happy"),    # Row 14
+        
+        # Walking with Drumstick
+        ("left", True, "drumstick", "happy"), # Row 15
+        ("right", True, "drumstick", "happy"),# Row 16
+        ("up", True, "drumstick", "happy"),   # Row 17
+        ("down", True, "drumstick", "happy"), # Row 18
+    ]
+    
+    # Update row count based on new list
+    rows = len(animations)
+    cols = 4
+    sheet = Image.new('RGBA', (frame_size * cols, frame_size * rows), (0, 0, 0, 0))
+
+    for row, (direction, is_walk, holding_item, emotion) in enumerate(animations):
         for col in range(4):
             if not is_walk:
                 frame = 0
-                mouth_open = col < 2  # Panting animation for idle
+                if emotion == "happy":
+                    mouth_open = col < 2  # Panting animation for idle happy
+                else:
+                    mouth_open = False # No panting for bored/confused
             else:
                 frame = col
                 mouth_open = True
@@ -476,8 +572,9 @@ def create_charlie_spritesheet(frame_size=128):
                 size=frame_size,
                 direction=direction,
                 frame=frame if is_walk else 0,
-                has_ball=has_ball,
-                mouth_open=mouth_open
+                holding_item=holding_item,
+                mouth_open=mouth_open,
+                emotion=emotion
             )
             sheet.paste(img, (col * frame_size, row * frame_size))
 
@@ -593,16 +690,17 @@ spritesheet.save("assets/sprites/characters/charlie_spritesheet.png")
 print(f"  Created charlie_spritesheet.png ({FRAME_SIZE*4}x{FRAME_SIZE*12} pixels, {FRAME_SIZE}x{FRAME_SIZE} frames)")
 
 # Static sprites
-static = draw_charlie_frame(size=128, direction="down", frame=0, has_ball=False, mouth_open=True)
+static = draw_charlie_frame(size=128, direction="down", frame=0, holding_item=None, mouth_open=True)
 static.save("assets/sprites/characters/charlie.png")
 print("  Created charlie.png (128x128)")
 
-static_large = draw_charlie_frame(size=96, direction="down", frame=0, has_ball=False, mouth_open=True)
+static_large = draw_charlie_frame(size=96, direction="down", frame=0, holding_item=None, mouth_open=True)
 static_large.save("assets/sprites/characters/charlie_large.png")
 print("  Created charlie_large.png (96x96)")
 
 # With ball
-charlie_ball = draw_charlie_frame(size=128, direction="down", frame=0, has_ball=True)
+# With ball (example single sprite)
+charlie_ball = draw_charlie_frame(size=128, direction="down", frame=0, holding_item="ball")
 charlie_ball.save("assets/sprites/characters/charlie_with_ball.png")
 print("  Created charlie_with_ball.png (128x128)")
 
@@ -616,16 +714,11 @@ charlie_box_large.save("assets/sprites/characters/charlie_in_box_large.png")
 print("  Created charlie_in_box_large.png (160x160)")
 
 print("\nDone! Frame size:", FRAME_SIZE, "x", FRAME_SIZE)
-print("Spritesheet layout (12 rows x 4 columns):")
-print("  Row 0: idle_down")
-print("  Row 1: idle_up")
-print("  Row 2: idle_left")
-print("  Row 3: idle_right")
-print("  Row 4: walk_down")
-print("  Row 5: walk_up")
-print("  Row 6: walk_left")
-print("  Row 7: walk_right")
-print("  Row 8: idle_down_ball")
-print("  Row 9: walk_down_ball")
-print("  Row 10: walk_left_ball")
-print("  Row 11: walk_right_ball")
+print("Spritesheet layout (19 rows x 4 columns):")
+print("  Row 0: Stand/Breathing")
+print("  Row 1: Bored")
+print("  Row 2: Confused")
+print("  Row 3-6: Walk (L, R, U, D)")
+print("  Row 7-10: Walk + Ball (L, R, U, D)")
+print("  Row 11-14: Walk + Bone (L, R, U, D)")
+print("  Row 15-18: Walk + Drumstick (L, R, U, D)")

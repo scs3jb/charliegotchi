@@ -1,4 +1,4 @@
-[gd_scene load_steps=55 format=3 uid="uid://overworld"]
+[gd_scene load_steps=56 format=3 uid="uid://overworld"]
 
 [ext_resource type="Script" path="res://scripts/scenes/Overworld.gd" id="1_overworld"]
 [ext_resource type="Script" path="res://scripts/player/Player.gd" id="2_player"]
@@ -6,6 +6,8 @@
 [ext_resource type="Script" path="res://scripts/ui/HUD.gd" id="4_hud"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/player_spritesheet.png" id="5_player_sprite"]
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/charlie_spritesheet.png" id="6_charlie_sprite"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/characters/charlie_sprite_frames.tres" id="7_charlie_frames"]
+[ext_resource type="SpriteFrames" path="res://resources/sprites/player_frames.tres" id="8_player_frames"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
 size = Vector2(16, 12)
@@ -19,69 +21,7 @@ size = Vector2(18, 12)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_house"]
 size = Vector2(100, 80)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_idle_down"]
-atlas = ExtResource("5_player_sprite")
-region = Rect2(0, 0, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_idle_left"]
-atlas = ExtResource("5_player_sprite")
-region = Rect2(0, 32, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_idle_right"]
-atlas = ExtResource("5_player_sprite")
-region = Rect2(0, 64, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_idle_up"]
-atlas = ExtResource("5_player_sprite")
-region = Rect2(0, 96, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_down_1"]
-atlas = ExtResource("5_player_sprite")
-region = Rect2(32, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_down_2"]
-atlas = ExtResource("5_player_sprite")
-region = Rect2(64, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_down_3"]
-atlas = ExtResource("5_player_sprite")
-region = Rect2(96, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_left_1"]
-atlas = ExtResource("5_player_sprite")
-region = Rect2(32, 32, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_left_2"]
-atlas = ExtResource("5_player_sprite")
-region = Rect2(64, 32, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_left_3"]
-atlas = ExtResource("5_player_sprite")
-region = Rect2(96, 32, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_right_1"]
-atlas = ExtResource("5_player_sprite")
-region = Rect2(32, 64, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_right_2"]
-atlas = ExtResource("5_player_sprite")
-region = Rect2(64, 64, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_right_3"]
-atlas = ExtResource("5_player_sprite")
-region = Rect2(96, 64, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_up_1"]
-atlas = ExtResource("5_player_sprite")
-region = Rect2(32, 96, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_up_2"]
-atlas = ExtResource("5_player_sprite")
-region = Rect2(64, 96, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_walk_up_3"]
-atlas = ExtResource("5_player_sprite")
-region = Rect2(96, 96, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_charlie_idle_down"]
 atlas = ExtResource("6_charlie_sprite")
@@ -147,108 +87,7 @@ region = Rect2(64, 96, 32, 32)
 atlas = ExtResource("6_charlie_sprite")
 region = Rect2(96, 96, 32, 32)
 
-[sub_resource type="SpriteFrames" id="SpriteFrames_player"]
-animations = [{
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_idle_down")
-}],
-"loop": true,
-"name": &"idle_down",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_idle_left")
-}],
-"loop": true,
-"name": &"idle_left",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_idle_right")
-}],
-"loop": true,
-"name": &"idle_right",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_idle_up")
-}],
-"loop": true,
-"name": &"idle_up",
-"speed": 5.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_walk_down_1")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_walk_down_2")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_walk_down_3")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_walk_down_2")
-}],
-"loop": true,
-"name": &"walk_down",
-"speed": 10.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_walk_left_1")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_walk_left_2")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_walk_left_3")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_walk_left_2")
-}],
-"loop": true,
-"name": &"walk_left",
-"speed": 10.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_walk_right_1")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_walk_right_2")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_walk_right_3")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_walk_right_2")
-}],
-"loop": true,
-"name": &"walk_right",
-"speed": 10.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_walk_up_1")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_walk_up_2")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_walk_up_3")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_player_walk_up_2")
-}],
-"loop": true,
-"name": &"walk_up",
-"speed": 10.0
-}]
+
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_charlie"]
 animations = [{
@@ -463,7 +302,7 @@ script = ExtResource("2_player")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Player"]
 texture_filter = 1
-sprite_frames = SubResource("SpriteFrames_player")
+sprite_frames = ExtResource("8_player_frames")
 animation = &"idle_down"
 autoplay = "idle_down"
 
@@ -492,7 +331,7 @@ script = ExtResource("3_charlie")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Charlie"]
 texture_filter = 1
-sprite_frames = SubResource("SpriteFrames_charlie")
+sprite_frames = ExtResource("7_charlie_frames")
 animation = &"idle_down"
 autoplay = "idle_down"
 

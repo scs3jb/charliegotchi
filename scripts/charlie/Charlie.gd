@@ -10,7 +10,7 @@ class_name Charlie
 var animated_sprite: AnimatedSprite2D = null
 
 # State
-enum State { IDLE, FOLLOWING, WANDERING, FETCHING, KEEP_AWAY, ON_LEASH }
+enum State { IDLE, FOLLOWING, WANDERING, FETCHING, KEEP_AWAY, ON_LEASH, HELD }
 var current_state: State = State.IDLE
 var is_on_leash: bool = false
 var target_position: Vector2 = Vector2.ZERO
@@ -37,8 +37,8 @@ signal picked_up_ball
 signal charlie_interacted
 
 # Spritesheet configuration
-const FRAME_SIZE: int = 128
-const SPRITESHEET_PATH: String = "res://assets/sprites/characters/charlie_spritesheet.png"
+# Spritesheet configuration
+# const FRAME_SIZE: int = 32 # Deprecated, using SpriteFrames resource
 
 func _ready() -> void:
 	add_to_group("charlie")
@@ -64,58 +64,17 @@ func _setup_animated_sprite() -> void:
 				child.queue_free()
 	else:
 		# Ensure pixel art filtering and correct scale for existing sprite
+		# Ensure pixel art filtering
 		animated_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		animated_sprite.scale = Vector2(0.25, 0.25)  # Scale down 128px to 32px display size
+		# Scale is now handled in the scene (should be 1.0 for 32px assets)
 
-	# Load spritesheet and create animations
-	var spritesheet = load(SPRITESHEET_PATH)
-	if spritesheet == null:
-		push_warning("Charlie: Could not load spritesheet at " + SPRITESHEET_PATH)
-		return
-
-	# Create SpriteFrames resource
-	var sprite_frames = SpriteFrames.new()
-
-	# Animation definitions: [name, row, frame_count, fps, loop]
-	var animations = [
-		["idle_down", 0, 4, 4.0, true],
-		["idle_up", 1, 4, 4.0, true],
-		["idle_left", 2, 4, 4.0, true],
-		["idle_right", 3, 4, 4.0, true],
-		["walk_down", 4, 4, 8.0, true],
-		["walk_up", 5, 4, 8.0, true],
-		["walk_left", 6, 4, 8.0, true],
-		["walk_right", 7, 4, 8.0, true],
-		["idle_down_ball", 8, 4, 4.0, true],
-		["walk_down_ball", 9, 4, 8.0, true],
-		["walk_left_ball", 10, 4, 8.0, true],
-		["walk_right_ball", 11, 4, 8.0, true],
-	]
-
-	# Remove default animation
-	if sprite_frames.has_animation("default"):
-		sprite_frames.remove_animation("default")
-
-	# Create each animation
-	for anim_def in animations:
-		var anim_name: String = anim_def[0]
-		var row: int = anim_def[1]
-		var frame_count: int = anim_def[2]
-		var fps: float = anim_def[3]
-		var loop: bool = anim_def[4]
-
-		sprite_frames.add_animation(anim_name)
-		sprite_frames.set_animation_speed(anim_name, fps)
-		sprite_frames.set_animation_loop(anim_name, loop)
-
-		# Add frames from spritesheet
-		for col in range(frame_count):
-			var atlas_texture = AtlasTexture.new()
-			atlas_texture.atlas = spritesheet
-			atlas_texture.region = Rect2(col * FRAME_SIZE, row * FRAME_SIZE, FRAME_SIZE, FRAME_SIZE)
-			sprite_frames.add_frame(anim_name, atlas_texture)
-
-	animated_sprite.sprite_frames = sprite_frames
+	# Note: SpriteFrames are now appointed in the editor via charlie_sprite_frames.tres
+	# We rely on the scene configuration rather than building it at runtime.
+	
+	if animated_sprite.sprite_frames == null:
+		push_warning("Charlie: AnimatedSprite2D has no SpriteFrames assigned!")
+	
+	# Start idle
 	animated_sprite.play("idle_down")
 
 func _physics_process(delta: float) -> void:
@@ -132,6 +91,9 @@ func _physics_process(delta: float) -> void:
 			_process_keep_away(delta)
 		State.ON_LEASH:
 			_process_on_leash(delta)
+		State.HELD:
+			# Do nothing, position controlled by player animation (implied)
+			pass
 
 	move_and_slide()
 	_update_animation()
@@ -415,3 +377,17 @@ func interact(player: Node2D) -> void:
 	if has_ball:
 		take_ball_from_charlie()
 		GameState.do_fetch_success()
+	elif player.has_method("pickup") and player.held_object == null:
+		player.pickup(self)
+
+func get_picked_up() -> void:
+	current_state = State.HELD
+	visible = false
+	$CollisionShape2D.set_deferred("disabled", true)
+	emit_signal("charlie_interacted") # Feedback?
+
+func get_dropped(drop_pos: Vector2) -> void:
+	current_state = State.IDLE
+	global_position = drop_pos
+	visible = true
+	$CollisionShape2D.set_deferred("disabled", false)
