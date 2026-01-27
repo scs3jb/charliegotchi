@@ -6,26 +6,21 @@ Built with Godot 4.x and GDScript.
 
 ## How to Build and Test
 
-### Opening the Project
-1. Open Godot 4.x
-2. Click "Import"
-3. Navigate to this folder and select `project.godot`
-4. Click "Import & Edit"
-
 ### Running the Game
-1. Press F5 (or click the Play button in top-right)
-2. If prompted, select `scenes/MainMenu.tscn` as the main scene
-
-### Testing Individual Scenes
-- Press F6 to run the currently open scene
-- Or right-click a scene in FileSystem and select "Run This Scene"
+To run the game run godot from the commandline
+```bash
+godot
+```
 
 ### Automated Verification
-To verify the integrity of animations and scenes (headless mode):
+Automated verificaiton should be run everytime assets or scenes are changed.
+Also delete assets in .godot/imported and reimport to make sure they work.
+Claude must always verify the integrity of animations and scenes (headless mode):
 ```bash
 godot -s scripts/verify_animations.gd --headless  # Checks Player.gd animation logic
 godot -s test_scenes.gd --headless            # Checks scene loading
 ```
+Animation must be smooth with no visual issues.
 
 ## Project Structure
 

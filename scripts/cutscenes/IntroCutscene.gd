@@ -1,16 +1,17 @@
 extends Control
 ## IntroCutscene - Phase 0: Epic storm scene with Charlie on raft
 
-@onready var sky: ColorRect = $Sky
-@onready var lightning_flash: ColorRect = $LightningFlash
-@onready var cloud_layer: Node2D = $CloudLayer
-@onready var ocean: Node2D = $Ocean
-@onready var raft: Node2D = $Raft
-@onready var charlie: Node2D = $Raft/Box/Charlie
-@onready var rain_heavy: CPUParticles2D = $RainHeavy
-@onready var rain_light: CPUParticles2D = $RainLight
-@onready var spray_particles: CPUParticles2D = $SprayParticles
-@onready var wind_lines: Node2D = $WindLines
+@onready var scene_content: Node2D = $SceneContent
+@onready var sky: ColorRect = $SceneContent/Sky
+@onready var lightning_flash: ColorRect = $SceneContent/LightningFlash
+@onready var cloud_layer: Node2D = $SceneContent/CloudLayer
+@onready var ocean: Node2D = $SceneContent/Ocean
+@onready var raft: Node2D = $SceneContent/Raft
+@onready var charlie: Node2D = $SceneContent/Raft/Box/Charlie
+@onready var rain_heavy: CPUParticles2D = $SceneContent/RainHeavy
+@onready var rain_light: CPUParticles2D = $SceneContent/RainLight
+@onready var spray_particles: CPUParticles2D = $SceneContent/SprayParticles
+@onready var wind_lines: Node2D = $SceneContent/WindLines
 @onready var narration_label: Label = $NarrationPanel/NarrationLabel
 @onready var shake_timer: Timer = $ShakeTimer
 @onready var lightning_timer: Timer = $LightningTimer
@@ -150,12 +151,12 @@ func _transition_to_calm(delta: float) -> void:
 
 func _on_shake_timer_timeout() -> void:
 	if storm_intensity > 0.1:
-		position = Vector2(
+		scene_content.position = Vector2(
 			randf_range(-shake_intensity, shake_intensity),
 			randf_range(-shake_intensity, shake_intensity)
 		)
 	else:
-		position = Vector2.ZERO
+		scene_content.position = Vector2.ZERO
 
 func _on_lightning_timer_timeout() -> void:
 	if storm_intensity > 0.3:

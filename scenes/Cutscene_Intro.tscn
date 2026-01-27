@@ -15,7 +15,9 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_intro")
 
-[node name="Sky" type="ColorRect" parent="."]
+[node name="SceneContent" type="Node2D" parent="."]
+
+[node name="Sky" type="ColorRect" parent="SceneContent"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -24,7 +26,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.08, 0.08, 0.15, 1)
 
-[node name="LightningFlash" type="ColorRect" parent="."]
+[node name="LightningFlash" type="ColorRect" parent="SceneContent"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -34,160 +36,160 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(1, 1, 0.95, 0.8)
 
-[node name="CloudLayer" type="Node2D" parent="."]
+[node name="CloudLayer" type="Node2D" parent="SceneContent"]
 position = Vector2(213, 30)
 
-[node name="Cloud1" type="ColorRect" parent="CloudLayer"]
+[node name="Cloud1" type="ColorRect" parent="SceneContent/CloudLayer"]
 offset_left = -180.0
 offset_top = -20.0
 offset_right = -80.0
 offset_bottom = 20.0
 color = Color(0.15, 0.15, 0.25, 1)
 
-[node name="Cloud2" type="ColorRect" parent="CloudLayer"]
+[node name="Cloud2" type="ColorRect" parent="SceneContent/CloudLayer"]
 offset_left = -50.0
 offset_top = -25.0
 offset_right = 80.0
 offset_bottom = 25.0
 color = Color(0.12, 0.12, 0.22, 1)
 
-[node name="Cloud3" type="ColorRect" parent="CloudLayer"]
+[node name="Cloud3" type="ColorRect" parent="SceneContent/CloudLayer"]
 offset_left = 100.0
 offset_top = -15.0
 offset_right = 220.0
 offset_bottom = 20.0
 color = Color(0.14, 0.14, 0.24, 1)
 
-[node name="Cloud4" type="ColorRect" parent="CloudLayer"]
+[node name="Cloud4" type="ColorRect" parent="SceneContent/CloudLayer"]
 offset_left = -120.0
 offset_top = 10.0
 offset_right = 20.0
 offset_bottom = 40.0
 color = Color(0.1, 0.1, 0.2, 1)
 
-[node name="Ocean" type="Node2D" parent="."]
+[node name="Ocean" type="Node2D" parent="SceneContent"]
 position = Vector2(0, 120)
 
-[node name="DeepWater" type="ColorRect" parent="Ocean"]
+[node name="DeepWater" type="ColorRect" parent="SceneContent/Ocean"]
 offset_right = 426.0
 offset_bottom = 120.0
 color = Color(0.08, 0.15, 0.25, 1)
 
-[node name="Wave1" type="ColorRect" parent="Ocean"]
+[node name="Wave1" type="ColorRect" parent="SceneContent/Ocean"]
 offset_top = -8.0
 offset_right = 426.0
 offset_bottom = 0.0
 color = Color(0.12, 0.22, 0.35, 1)
 
-[node name="Wave2" type="ColorRect" parent="Ocean"]
+[node name="Wave2" type="ColorRect" parent="SceneContent/Ocean"]
 offset_top = 20.0
 offset_right = 426.0
 offset_bottom = 28.0
 color = Color(0.1, 0.2, 0.32, 1)
 
-[node name="Wave3" type="ColorRect" parent="Ocean"]
+[node name="Wave3" type="ColorRect" parent="SceneContent/Ocean"]
 offset_top = 50.0
 offset_right = 426.0
 offset_bottom = 58.0
 color = Color(0.09, 0.18, 0.3, 1)
 
-[node name="Foam1" type="ColorRect" parent="Ocean"]
+[node name="Foam1" type="ColorRect" parent="SceneContent/Ocean"]
 offset_left = 50.0
 offset_top = -5.0
 offset_right = 120.0
 offset_bottom = -2.0
 color = Color(0.5, 0.6, 0.7, 0.6)
 
-[node name="Foam2" type="ColorRect" parent="Ocean"]
+[node name="Foam2" type="ColorRect" parent="SceneContent/Ocean"]
 offset_left = 200.0
 offset_top = 22.0
 offset_right = 280.0
 offset_bottom = 25.0
 color = Color(0.5, 0.6, 0.7, 0.5)
 
-[node name="Foam3" type="ColorRect" parent="Ocean"]
+[node name="Foam3" type="ColorRect" parent="SceneContent/Ocean"]
 offset_left = 320.0
 offset_top = -3.0
 offset_right = 400.0
 offset_bottom = 0.0
 color = Color(0.5, 0.6, 0.7, 0.6)
 
-[node name="Raft" type="Node2D" parent="."]
+[node name="Raft" type="Node2D" parent="SceneContent"]
 position = Vector2(213, 145)
 
-[node name="RaftBase" type="ColorRect" parent="Raft"]
+[node name="RaftBase" type="ColorRect" parent="SceneContent/Raft"]
 offset_left = -35.0
 offset_top = -5.0
 offset_right = 35.0
 offset_bottom = 12.0
 color = Color(0.4, 0.28, 0.15, 1)
 
-[node name="Log1" type="ColorRect" parent="Raft"]
+[node name="Log1" type="ColorRect" parent="SceneContent/Raft"]
 offset_left = -32.0
 offset_top = -3.0
 offset_right = 32.0
 offset_bottom = 3.0
 color = Color(0.45, 0.32, 0.18, 1)
 
-[node name="Log2" type="ColorRect" parent="Raft"]
+[node name="Log2" type="ColorRect" parent="SceneContent/Raft"]
 offset_left = -30.0
 offset_top = 4.0
 offset_right = 30.0
 offset_bottom = 10.0
 color = Color(0.42, 0.3, 0.16, 1)
 
-[node name="Rope1" type="ColorRect" parent="Raft"]
+[node name="Rope1" type="ColorRect" parent="SceneContent/Raft"]
 offset_left = -20.0
 offset_top = -4.0
 offset_right = -18.0
 offset_bottom = 11.0
 color = Color(0.55, 0.45, 0.3, 1)
 
-[node name="Rope2" type="ColorRect" parent="Raft"]
+[node name="Rope2" type="ColorRect" parent="SceneContent/Raft"]
 offset_left = 18.0
 offset_top = -4.0
 offset_right = 20.0
 offset_bottom = 11.0
 color = Color(0.55, 0.45, 0.3, 1)
 
-[node name="Box" type="Node2D" parent="Raft"]
+[node name="Box" type="Node2D" parent="SceneContent/Raft"]
 position = Vector2(0, -12)
 
-[node name="BoxBack" type="ColorRect" parent="Raft/Box"]
+[node name="BoxBack" type="ColorRect" parent="SceneContent/Raft/Box"]
 offset_left = -18.0
 offset_top = -12.0
 offset_right = 18.0
 offset_bottom = 8.0
 color = Color(0.45, 0.32, 0.2, 1)
 
-[node name="BoxFront" type="ColorRect" parent="Raft/Box"]
+[node name="BoxFront" type="ColorRect" parent="SceneContent/Raft/Box"]
 offset_left = -16.0
 offset_top = -10.0
 offset_right = 16.0
 offset_bottom = 6.0
 color = Color(0.55, 0.4, 0.25, 1)
 
-[node name="BoxFlap1" type="ColorRect" parent="Raft/Box"]
+[node name="BoxFlap1" type="ColorRect" parent="SceneContent/Raft/Box"]
 offset_left = -16.0
 offset_top = -14.0
 offset_right = -2.0
 offset_bottom = -10.0
 color = Color(0.5, 0.36, 0.22, 1)
 
-[node name="BoxFlap2" type="ColorRect" parent="Raft/Box"]
+[node name="BoxFlap2" type="ColorRect" parent="SceneContent/Raft/Box"]
 offset_left = 2.0
 offset_top = -16.0
 offset_right = 16.0
 offset_bottom = -10.0
 color = Color(0.52, 0.38, 0.24, 1)
 
-[node name="Charlie" type="AnimatedSprite2D" parent="Raft/Box"]
+[node name="Charlie" type="AnimatedSprite2D" parent="SceneContent/Raft/Box"]
 position = Vector2(0, -9)
 sprite_frames = ExtResource("2_charlie_frames")
 animation = &"idle_down"
 autoplay = "idle_down"
 
-[node name="RainHeavy" type="CPUParticles2D" parent="."]
+[node name="RainHeavy" type="CPUParticles2D" parent="SceneContent"]
 position = Vector2(213, -20)
 emitting = true
 amount = 300
@@ -205,7 +207,7 @@ scale_amount_min = 0.5
 scale_amount_max = 2.0
 color = Color(0.6, 0.7, 0.85, 0.7)
 
-[node name="RainLight" type="CPUParticles2D" parent="."]
+[node name="RainLight" type="CPUParticles2D" parent="SceneContent"]
 position = Vector2(213, -20)
 emitting = true
 amount = 150
@@ -223,7 +225,7 @@ scale_amount_min = 0.3
 scale_amount_max = 1.0
 color = Color(0.5, 0.6, 0.75, 0.5)
 
-[node name="SprayParticles" type="CPUParticles2D" parent="."]
+[node name="SprayParticles" type="CPUParticles2D" parent="SceneContent"]
 position = Vector2(213, 130)
 emitting = true
 amount = 50
@@ -240,37 +242,37 @@ scale_amount_min = 0.5
 scale_amount_max = 1.5
 color = Color(0.5, 0.6, 0.75, 0.4)
 
-[node name="WindLines" type="Node2D" parent="."]
+[node name="WindLines" type="Node2D" parent="SceneContent"]
 
-[node name="Wind1" type="ColorRect" parent="WindLines"]
+[node name="Wind1" type="ColorRect" parent="SceneContent/WindLines"]
 offset_left = 20.0
 offset_top = 60.0
 offset_right = 80.0
 offset_bottom = 62.0
 color = Color(0.5, 0.6, 0.7, 0.3)
 
-[node name="Wind2" type="ColorRect" parent="WindLines"]
+[node name="Wind2" type="ColorRect" parent="SceneContent/WindLines"]
 offset_left = 150.0
 offset_top = 90.0
 offset_right = 230.0
 offset_bottom = 91.0
 color = Color(0.5, 0.6, 0.7, 0.25)
 
-[node name="Wind3" type="ColorRect" parent="WindLines"]
+[node name="Wind3" type="ColorRect" parent="SceneContent/WindLines"]
 offset_left = 280.0
 offset_top = 45.0
 offset_right = 380.0
 offset_bottom = 46.0
 color = Color(0.5, 0.6, 0.7, 0.35)
 
-[node name="Wind4" type="ColorRect" parent="WindLines"]
+[node name="Wind4" type="ColorRect" parent="SceneContent/WindLines"]
 offset_left = 100.0
 offset_top = 140.0
 offset_right = 180.0
 offset_bottom = 141.0
 color = Color(0.5, 0.6, 0.7, 0.2)
 
-[node name="ScreenShake" type="Node2D" parent="."]
+[node name="ScreenShake" type="Node2D" parent="SceneContent"]
 
 [node name="NarrationPanel" type="Panel" parent="."]
 layout_mode = 1
