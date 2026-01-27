@@ -140,15 +140,19 @@ func _show_charlie_out() -> void:
 func _pickup_charlie() -> void:
 	current_state = BeachState.PICKUP_CHARLIE
 
+	# Use the player's pickup method which plays the pickup animation
+	# and transitions to hold animations
+	player.pickup(charlie)
+
+	# Prevent player from dropping Charlie until scene transition
+	player.can_drop = false
+
 	dialogue_queue = [
 		"You gently pick up Charlie.",
 		"He nestles into your arms, exhausted from his ordeal.",
 		"You should take him home where it's safe and warm."
 	]
 	_show_next_dialogue()
-
-	# Hide Charlie sprite (player is carrying him)
-	charlie.visible = false
 
 func _go_to_house() -> void:
 	current_state = BeachState.GOING_HOME

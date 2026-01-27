@@ -10,6 +10,7 @@ var animated_sprite: AnimatedSprite2D = null
 
 # State
 var can_move: bool = true
+var can_drop: bool = true
 var facing_direction: Vector2 = Vector2.DOWN
 var held_object: Node2D = null
 var is_picking_up: bool = false
@@ -51,7 +52,7 @@ func _physics_process(_delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact"):
-		if held_object:
+		if held_object and can_move and can_drop:
 			drop()
 		else:
 			_try_interact()
