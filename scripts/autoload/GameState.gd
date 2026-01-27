@@ -12,6 +12,20 @@ var player_appearance: Dictionary = {
 # Charlie Stats (0.0 to 1.0)
 var bonding: float = 0.0  # Heart meter
 var entertainment: float = 0.0  # Entertainment meter
+var hunger: float = 1.0  # Hunger meter (1.0 = full, 0.0 = starving)
+
+# Stat decay tracking (game hours since last decay)
+var last_hunger_decay_hour: float = 8.0
+var last_entertainment_decay_hour: float = 8.0
+var last_bonding_decay_day: int = 1
+
+# Decay rates
+const HUNGER_DECAY_INTERVAL: float = 8.0  # Every 8 game hours
+const HUNGER_DECAY_AMOUNT: float = 0.05  # 5% per interval
+const ENTERTAINMENT_DECAY_INTERVAL: float = 8.0  # Every 8 game hours
+const ENTERTAINMENT_DECAY_AMOUNT: float = 0.01  # 1% per interval
+const BONDING_DECAY_INTERVAL: int = 1  # Every 24 game hours (1 day)
+const BONDING_DECAY_AMOUNT: float = 0.02  # 2% per day
 
 # Game Progress
 var current_phase: int = 0  # 0=Intro, 1=House, 2=Outside
@@ -55,6 +69,46 @@ func add_entertainment(amount: float) -> void:
 	emit_signal("stats_changed")
 	_check_trust_unlock()
 
+func add_hunger(amount: float) -> void:
+	hunger = clampf(hunger + amount, 0.0, 1.0)
+	emit_signal("stats_changed")
+
+func process_stat_decay(game_hour: float, game_day: int) -> void:
+	# Calculate hours passed since last hunger decay
+	var hours_since_hunger_decay = game_hour - last_hunger_decay_hour
+	if hours_since_hunger_decay < 0:
+		hours_since_hunger_decay += 24.0  # Wrapped to next day
+
+	# Hunger decay every 8 hours
+	while hours_since_hunger_decay >= HUNGER_DECAY_INTERVAL:
+		hunger = clampf(hunger - HUNGER_DECAY_AMOUNT, 0.0, 1.0)
+		last_hunger_decay_hour += HUNGER_DECAY_INTERVAL
+		if last_hunger_decay_hour >= 24.0:
+			last_hunger_decay_hour -= 24.0
+		hours_since_hunger_decay -= HUNGER_DECAY_INTERVAL
+
+	# Calculate hours passed since last entertainment decay
+	var hours_since_ent_decay = game_hour - last_entertainment_decay_hour
+	if hours_since_ent_decay < 0:
+		hours_since_ent_decay += 24.0
+
+	# Entertainment decay every 8 hours
+	while hours_since_ent_decay >= ENTERTAINMENT_DECAY_INTERVAL:
+		entertainment = clampf(entertainment - ENTERTAINMENT_DECAY_AMOUNT, 0.0, 1.0)
+		last_entertainment_decay_hour += ENTERTAINMENT_DECAY_INTERVAL
+		if last_entertainment_decay_hour >= 24.0:
+			last_entertainment_decay_hour -= 24.0
+		hours_since_ent_decay -= ENTERTAINMENT_DECAY_INTERVAL
+
+	# Bonding decay every 24 hours (each new day)
+	var days_since_bonding_decay = game_day - last_bonding_decay_day
+	while days_since_bonding_decay >= BONDING_DECAY_INTERVAL:
+		bonding = clampf(bonding - BONDING_DECAY_AMOUNT, 0.0, 1.0)
+		last_bonding_decay_day += BONDING_DECAY_INTERVAL
+		days_since_bonding_decay -= BONDING_DECAY_INTERVAL
+
+	emit_signal("stats_changed")
+
 func _check_trust_unlock() -> void:
 	if not charlie_trusts_player and bonding >= 1.0 and entertainment >= 1.0:
 		charlie_trusts_player = true
@@ -66,7 +120,8 @@ func do_feed() -> void:
 	feed_count += 1
 	add_bonding(0.25)
 	add_entertainment(0.125)
-	print("Fed Charlie! Bonding: ", bonding, " Entertainment: ", entertainment)
+	add_hunger(0.25)  # Feeding restores 25% hunger
+	print("Fed Charlie! Bonding: ", bonding, " Entertainment: ", entertainment, " Hunger: ", hunger)
 
 func do_pet() -> void:
 	pet_count += 1
@@ -99,6 +154,10 @@ func save_game() -> void:
 		"player_appearance": player_appearance,
 		"bonding": bonding,
 		"entertainment": entertainment,
+		"hunger": hunger,
+		"last_hunger_decay_hour": last_hunger_decay_hour,
+		"last_entertainment_decay_hour": last_entertainment_decay_hour,
+		"last_bonding_decay_day": last_bonding_decay_day,
 		"current_phase": current_phase,
 		"intro_complete": intro_complete,
 		"charlie_found": charlie_found,
@@ -137,6 +196,10 @@ func load_game() -> bool:
 		player_appearance = save_data.get("player_appearance", player_appearance)
 		bonding = save_data.get("bonding", 0.0)
 		entertainment = save_data.get("entertainment", 0.0)
+		hunger = save_data.get("hunger", 1.0)
+		last_hunger_decay_hour = save_data.get("last_hunger_decay_hour", 8.0)
+		last_entertainment_decay_hour = save_data.get("last_entertainment_decay_hour", 8.0)
+		last_bonding_decay_day = save_data.get("last_bonding_decay_day", 1)
 		current_phase = save_data.get("current_phase", 0)
 		intro_complete = save_data.get("intro_complete", false)
 		charlie_found = save_data.get("charlie_found", false)
@@ -163,6 +226,10 @@ func reset_game() -> void:
 	player_appearance = {"hair_color": Color.GOLD, "outfit_color": Color.PINK}
 	bonding = 0.0
 	entertainment = 0.0
+	hunger = 1.0
+	last_hunger_decay_hour = 8.0
+	last_entertainment_decay_hour = 8.0
+	last_bonding_decay_day = 1
 	current_phase = 0
 	intro_complete = false
 	charlie_found = false

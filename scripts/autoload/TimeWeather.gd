@@ -39,6 +39,9 @@ func _process(delta: float) -> void:
 		GameState.current_hour -= 24.0
 		_advance_day()
 
+	# Process stat decay based on game time
+	GameState.process_stat_decay(GameState.current_hour, GameState.current_day)
+
 	_update_ambient_light()
 	emit_signal("time_updated", GameState.current_hour)
 
