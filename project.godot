@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 GameState="*res://scripts/autoload/GameState.gd"
 TimeWeather="*res://scripts/autoload/TimeWeather.gd"
+DebugMenu="*res://scripts/autoload/DebugMenu.gd"
 
 [display]
 
