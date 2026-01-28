@@ -58,15 +58,15 @@ def draw_charlie(draw, x, y, direction, frame_idx, emotion="happy", item=None):
         draw.rectangle([cx - foot_sep - 2, cy - 2 + l_off, cx - foot_sep + 1, cy + l_off], fill=CREAM_DARK)
         draw.rectangle([cx + foot_sep - 1, cy - 2 + r_off, cx + foot_sep + 2, cy + r_off], fill=CREAM_DARK)
         
-    # Left
+    # Left (front legs toward head on left, back legs toward tail on right)
     elif direction == 2:
-        draw.rectangle([cx - 4 + (frame_idx%2)*2, cy - 2, cx - 1 + (frame_idx%2)*2, cy], fill=CREAM_DARK) # Back
-        draw.rectangle([cx + 0 - (frame_idx%2)*2, cy - 2, cx + 3 - (frame_idx%2)*2, cy], fill=CREAM_DARK) # Front
+        draw.rectangle([cx + 2 + (frame_idx%2)*2, cy - 2, cx + 5 + (frame_idx%2)*2, cy], fill=CREAM_DARK) # Back legs
+        draw.rectangle([cx - 6 - (frame_idx%2)*2, cy - 2, cx - 3 - (frame_idx%2)*2, cy], fill=CREAM_DARK) # Front legs
 
-    # Right
+    # Right (front legs toward head on right, back legs toward tail on left)
     elif direction == 3:
-        draw.rectangle([cx - 3 + (frame_idx%2)*2, cy - 2, cx + 0 + (frame_idx%2)*2, cy], fill=CREAM_DARK)
-        draw.rectangle([cx + 1 - (frame_idx%2)*2, cy - 2, cx + 4 - (frame_idx%2)*2, cy], fill=CREAM_DARK)
+        draw.rectangle([cx - 5 + (frame_idx%2)*2, cy - 2, cx - 2 + (frame_idx%2)*2, cy], fill=CREAM_DARK) # Back legs
+        draw.rectangle([cx + 3 - (frame_idx%2)*2, cy - 2, cx + 6 - (frame_idx%2)*2, cy], fill=CREAM_DARK) # Front legs
 
     # --- BODY ---
     by = y + 16 + bob_y
@@ -79,13 +79,17 @@ def draw_charlie(draw, x, y, direction, frame_idx, emotion="happy", item=None):
         tail_off = (frame_idx % 2) * 2 - 1
         draw.rectangle([cx - 2 + tail_off, by - 6, cx + 2 + tail_off, by - 2], fill=CREAM_LIGHT)
     elif direction == 2: # Left
-        draw.rectangle([cx - 4, by - 4, cx + 4, by + 4], fill=CREAM_MID)
-        # Tail Left
-        draw.rectangle([cx + 3, by - 5, cx + 6, by - 2], fill=CREAM_LIGHT)
+        # Longer body for side view (12 pixels wide)
+        draw.rectangle([cx - 6, by - 4, cx + 6, by + 4], fill=CREAM_MID)
+        draw.rectangle([cx - 5, by - 3, cx + 5, by + 3], fill=CREAM_LIGHT)
+        # Tail Left (positioned at back of longer body)
+        draw.rectangle([cx + 5, by - 5, cx + 8, by - 2], fill=CREAM_LIGHT)
     elif direction == 3: # Right
-        draw.rectangle([cx - 4, by - 4, cx + 4, by + 4], fill=CREAM_MID)
-        # Tail Right
-        draw.rectangle([cx - 6, by - 5, cx - 3, by - 2], fill=CREAM_LIGHT)
+        # Longer body for side view (12 pixels wide)
+        draw.rectangle([cx - 6, by - 4, cx + 6, by + 4], fill=CREAM_MID)
+        draw.rectangle([cx - 5, by - 3, cx + 5, by + 3], fill=CREAM_LIGHT)
+        # Tail Right (positioned at back of longer body)
+        draw.rectangle([cx - 8, by - 5, cx - 5, by - 2], fill=CREAM_LIGHT)
 
     # --- HEAD ---
     hy = by - 8

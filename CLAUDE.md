@@ -62,9 +62,24 @@ charligotchi/
 High-quality, retro-style pixel art is now generated procedurally using Python (PIL).
 
 ### Generation Scripts
-Run these scripts to regenerate assets if needed (requires `pip install pillow`):
-- `python scripts/generate_player_extended.py`: Generates `player_spritesheet.png` (13 rows).
-- `python generate_charlie_spritesheet.py`: Generates `charlie_spritesheet.png`.
+Run these scripts to regenerate assets if needed. First set up the Python environment:
+```bash
+uv venv && source .venv/bin/activate && uv pip install pillow
+```
+
+Then run the generators:
+```bash
+.venv/bin/python scripts/generate_player_extended.py  # Generates player_spritesheet.png (13 rows)
+.venv/bin/python generate_pixel_charlie.py            # Generates charlie_spritesheet.png
+```
+
+After regenerating, reimport assets and run verification:
+```bash
+rm -rf .godot/imported
+godot --headless --import
+godot -s scripts/verify_animations.gd --headless
+godot -s test_scenes.gd --headless
+```
 
 ### Sprite Sheet Layout (Player)
 The `player_spritesheet.png` (128x416) contains 13 rows, each with 4 frames (32x32):
