@@ -121,7 +121,10 @@ Charlie has three core stats stored in `GameState.gd` (values 0.0 to 1.0):
 
 Stats affect Charlie's behavior:
 - **High bonding (≥0.5)**: Charlie follows player nicely on leash
-- **Low bonding (<0.5)**: Charlie wanders randomly, may resist leash
+- **Low bonding (<0.5)**: Charlie wanders randomly, resists leash strongly
+
+Increasing bonding:
+- **Petting**: Press E near Charlie in Overworld to pet (+5% bonding)
 
 ### Debug Menu (F3)
 Press F3 to toggle the debug overlay. Features:
@@ -142,6 +145,7 @@ When Charlie is on leash in the Overworld (`scripts/charlie/Charlie.gd`):
 Resistance rules:
 - Only applies when player walks **away** from Charlie
 - Walking toward Charlie = no resistance
+- At max leash length: Charlie gets **dragged** reluctantly, player speed drops to ~15px/s
 - Leash visual changes color/thickness when taut
 - Leash attaches to player's hand (offset varies by facing direction)
 - Leash attaches to Charlie's collar (below head)

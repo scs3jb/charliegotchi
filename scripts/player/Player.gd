@@ -3,7 +3,7 @@ class_name Player
 ## Player - The main character (blonde girl)
 
 @export var speed: float = 80.0
-@export var leash_drag_speed: float = 40.0  # Speed when dragging resistant Charlie
+@export var leash_drag_speed: float = 15.0  # Speed when dragging resistant Charlie (very slow)
 
 # References
 var animated_sprite: AnimatedSprite2D = null

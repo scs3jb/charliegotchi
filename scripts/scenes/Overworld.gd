@@ -69,6 +69,14 @@ func _update_interaction_prompt() -> void:
 	var player_pos = player.global_position
 	nearby_interactable = null
 
+	# Check distance to Charlie first (petting)
+	var charlie_dist = player_pos.distance_to(charlie.global_position)
+	if charlie_dist < 40:
+		interaction_prompt.text = "[E] Pet Charlie"
+		interaction_prompt.visible = true
+		nearby_interactable = charlie
+		return
+
 	# Check distance to house door
 	var dist = player_pos.distance_to(house.global_position + Vector2(0, 40))
 	if dist < 50:
@@ -79,7 +87,9 @@ func _update_interaction_prompt() -> void:
 		interaction_prompt.visible = false
 
 func _on_interact_pressed() -> void:
-	if nearby_interactable == house:
+	if nearby_interactable == charlie:
+		charlie.interact(player)
+	elif nearby_interactable == house:
 		_enter_house()
 
 func _enter_house() -> void:

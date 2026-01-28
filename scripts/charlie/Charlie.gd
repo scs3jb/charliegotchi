@@ -343,6 +343,15 @@ func _process_on_leash(delta: float) -> void:
 			resistance_amount = tension_factor * moving_away_factor
 			is_resisting = resistance_amount > 0.1
 
+			# When at max leash length, Charlie gets dragged reluctantly
+			if distance_to_player >= leash_max_distance * 0.95:
+				# Charlie is being dragged - move toward player but slowly and reluctantly
+				var drag_speed = speed * 0.3 * tension_factor
+				velocity = direction_to_player * drag_speed
+				# Maximum resistance when being dragged
+				resistance_amount = 1.0
+				is_resisting = true
+
 func _update_animation() -> void:
 	if not animated_sprite or not animated_sprite.sprite_frames:
 		return
@@ -432,8 +441,23 @@ func interact(player: Node2D) -> void:
 	if has_ball:
 		take_ball_from_charlie()
 		GameState.do_fetch_success()
+	elif is_on_leash:
+		# When on leash, petting increases bonding
+		_get_pet()
 	elif player.has_method("pickup") and player.held_object == null:
 		player.pickup(self)
+
+func _get_pet() -> void:
+	# Increase bonding when petted
+	var bonding_increase = 0.05  # 5% per pet
+	GameState.bonding = clampf(GameState.bonding + bonding_increase, 0.0, 1.0)
+	GameState.emit_signal("stats_changed")
+
+	# Brief pause to show Charlie enjoying the pet
+	velocity = Vector2.ZERO
+
+	# Visual feedback - could add animation here later
+	print("Charlie enjoys the head rub! Bonding: %d%%" % int(GameState.bonding * 100))
 
 func get_picked_up() -> void:
 	current_state = State.HELD
