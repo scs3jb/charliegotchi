@@ -3,10 +3,12 @@ class_name Player
 ## Player - The main character (blonde girl)
 
 @export var speed: float = 80.0
+@export var leash_drag_speed: float = 40.0  # Speed when dragging resistant Charlie
 
 # References
 var animated_sprite: AnimatedSprite2D = null
 @onready var interaction_area: Area2D = $InteractionArea
+var charlie_ref: Node2D = null  # Reference to Charlie for leash mechanics
 
 # State
 var can_move: bool = true
@@ -43,8 +45,16 @@ func _physics_process(_delta: float) -> void:
 	if input_dir != Vector2.ZERO:
 		facing_direction = input_dir.normalized()
 
+	# Check if Charlie is resisting on the leash
+	var current_speed = speed
+	if charlie_ref and charlie_ref.has_method("get_leash_resistance"):
+		var resistance = charlie_ref.get_leash_resistance()
+		if resistance > 0:
+			# Lerp between normal speed and drag speed based on resistance
+			current_speed = lerpf(speed, leash_drag_speed, resistance)
+
 	# Apply movement
-	velocity = input_dir * speed
+	velocity = input_dir * current_speed
 	move_and_slide()
 
 	# Update animation
@@ -151,6 +161,22 @@ func set_can_move(value: bool) -> void:
 	can_move = value
 	if not can_move:
 		velocity = Vector2.ZERO
+
+func set_charlie(charlie: Node2D) -> void:
+	charlie_ref = charlie
+
+func get_leash_hand_offset() -> Vector2:
+	# Return offset from player center to hand position based on facing direction
+	if abs(facing_direction.x) > abs(facing_direction.y):
+		if facing_direction.x > 0:
+			return Vector2(10, 4)  # Right hand when facing right
+		else:
+			return Vector2(-10, 4)  # Left hand when facing left
+	else:
+		if facing_direction.y > 0:
+			return Vector2(8, 8)  # Hand when facing down (visible at side)
+		else:
+			return Vector2(-8, 4)  # Hand when facing up (visible at side)
 
 func _on_interaction_area_body_entered(body: Node2D) -> void:
 	if body.is_in_group("interactable"):

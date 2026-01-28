@@ -37,6 +37,9 @@ charligotchi/
 │   └── ui/
 ├── scripts/               # All .gd script files
 │   ├── autoload/          # Singleton scripts
+│   │   ├── GameState.gd   # Charlie stats, save/load, game progress
+│   │   ├── TimeWeather.gd # Day/night cycle, weather, seasons
+│   │   └── DebugMenu.gd   # F3 debug overlay for testing
 │   ├── player/
 │   │   └── Player.gd      # Handles movement, pickup, and animation state
 │   ├── charlie/
@@ -54,7 +57,7 @@ charligotchi/
 ```
 
 ## Dev Status: Pixel Art Integration
- **(Updated 2026-01-27)**
+**(Updated 2026-01-28)**
 
 High-quality, retro-style pixel art is now generated procedurally using Python (PIL).
 
@@ -104,6 +107,67 @@ If loading scenes fails with "Identifier not found: GameState":
     *   **New**: Pick up Charlie (Interact 'E') and walk him around.
     *   **New**: Drop Charlie (Interact 'E' while holding).
 4.  **Overworld**: Explore with Charlie following.
+
+## Game Systems
+
+### Charlie's Stats
+Charlie has three core stats stored in `GameState.gd` (values 0.0 to 1.0):
+
+| Stat | Decay Rate | Description |
+|------|------------|-------------|
+| **Hunger** | -5% every 8 game hours | 1.0 = full, 0.0 = starving |
+| **Entertainment** | -1% every 8 game hours | How entertained Charlie is |
+| **Bonding** | -2% every 24 game hours | Relationship with player |
+
+Stats affect Charlie's behavior:
+- **High bonding (≥0.5)**: Charlie follows player nicely on leash
+- **Low bonding (<0.5)**: Charlie wanders randomly, may resist leash
+
+### Debug Menu (F3)
+Press F3 to toggle the debug overlay. Features:
+- Sliders to adjust bonding, entertainment, hunger
+- Time skip buttons (+1 hour, +1 day)
+- Fill/Empty buttons for quick testing
+- Leash tension/resistance display when in Overworld
+
+### Leash Mechanics
+When Charlie is on leash in the Overworld (`scripts/charlie/Charlie.gd`):
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `leash_max_distance` | 96px | 3x Charlie's body length |
+| Resistance threshold | 70% tension | No resistance below this |
+| Full resistance | 100% tension | Maximum player slowdown |
+
+Resistance rules:
+- Only applies when player walks **away** from Charlie
+- Walking toward Charlie = no resistance
+- Leash visual changes color/thickness when taut
+- Leash attaches to player's hand (offset varies by facing direction)
+- Leash attaches to Charlie's collar (below head)
+
+### Day/Night Cycle
+Configured in `TimeWeather.gd`:
+- `time_scale = 15.0`: 1 real second = 0.25 game minutes
+- Full day cycle takes ~96 real minutes
+- Ambient lighting changes based on time of day
+
+## Scene-Specific Rules
+
+### Intro Cutscene (`Cutscene_Intro.tscn`)
+- Shake effects only apply to `SceneContent` node
+- `NarrationPanel` and `SkipButton` remain stationary for readability
+
+### Beach Scene (`Beach_Start.tscn`)
+- Player cannot enter deep water (dark blue) or go off top of screen
+- Invisible `StaticBody2D` boundaries constrain movement
+- When picking up Charlie, `player.can_drop = false` until scene transition
+- Uses full animated player sprite (not placeholder)
+
+### Overworld (`Overworld.tscn`)
+- Charlie is always on leash
+- `LeashLine` (Line2D) renders between player hand and Charlie collar
+- Player speed reduces based on Charlie's resistance
 
 ### Pending Features
 - Wildlife encounters

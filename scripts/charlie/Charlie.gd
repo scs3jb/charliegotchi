@@ -4,7 +4,7 @@ class_name Charlie
 
 @export var speed: float = 60.0
 @export var follow_distance: float = 30.0  # How close to stay to player
-@export var leash_max_distance: float = 60.0  # Max distance when on leash
+@export var leash_max_distance: float = 96.0  # Max distance when on leash (3 Charlie lengths)
 
 # References
 var animated_sprite: AnimatedSprite2D = null
@@ -28,6 +28,12 @@ var flee_direction: Vector2 = Vector2.ZERO
 # Wander behavior
 var wander_timer: float = 0.0
 var wander_direction: Vector2 = Vector2.ZERO
+
+# Leash resistance (for slowing player)
+var is_resisting: bool = false
+var resistance_amount: float = 0.0  # 0.0 to 1.0, how much Charlie is resisting
+var leash_wander_timer: float = 0.0
+var leash_wander_direction: Vector2 = Vector2.ZERO
 
 # Animation
 var facing_direction: String = "down"
@@ -271,14 +277,25 @@ func _process_keep_away(delta: float) -> void:
 	if keep_away_timer <= 0:
 		keep_away_timer = randf_range(2.5, 5.0)
 
-func _process_on_leash(_delta: float) -> void:
+func _process_on_leash(delta: float) -> void:
 	if not player_ref:
 		return
 
 	var distance_to_player = global_position.distance_to(player_ref.global_position)
+	var direction_to_player = (player_ref.global_position - global_position).normalized()
+	var leash_tension = distance_to_player / leash_max_distance  # 0.0 to 1.0+
 
-	# High bonding = walk in sync with player
-	if GameState.bonding >= 0.75:
+	# Get player's movement direction
+	var player_velocity = Vector2.ZERO
+	if player_ref is CharacterBody2D:
+		player_velocity = player_ref.velocity
+
+	# Reset resistance
+	is_resisting = false
+	resistance_amount = 0.0
+
+	# High bonding (>= 0.5): Charlie follows the player nicely
+	if GameState.bonding >= 0.5:
 		# Match player position with offset
 		var target = player_ref.global_position + Vector2(20, 20)
 		if global_position.distance_to(target) > 5:
@@ -286,17 +303,45 @@ func _process_on_leash(_delta: float) -> void:
 			velocity = direction * speed
 		else:
 			velocity = Vector2.ZERO
-	elif distance_to_player > leash_max_distance:
-		# Pull toward player when too far
-		var direction = (player_ref.global_position - global_position).normalized()
-		velocity = direction * speed * 1.2
-	elif distance_to_player < follow_distance:
-		# Too close, slight wander
-		velocity = velocity.lerp(Vector2.ZERO, 0.1)
 	else:
-		# Normal following
-		var direction = (player_ref.global_position - global_position).normalized()
-		velocity = direction * speed * 0.8
+		# Low bonding: Charlie wanders randomly
+		leash_wander_timer -= delta
+
+		if leash_wander_timer <= 0:
+			# Pick new random direction or stop
+			if randf() < 0.3:
+				leash_wander_direction = Vector2.ZERO
+			else:
+				leash_wander_direction = Vector2(randf_range(-1, 1), randf_range(-1, 1)).normalized()
+			leash_wander_timer = randf_range(1.0, 3.0)
+
+		# Movement based on leash tension
+		if distance_to_player >= leash_max_distance:
+			# At max leash length - must follow player, can't go further
+			velocity = direction_to_player * speed * 0.5
+		elif leash_tension > 0.7:
+			# Getting tight - reduce wandering, bias toward player
+			var wander_factor = 1.0 - ((leash_tension - 0.7) / 0.3)  # 1.0 at 70%, 0.0 at 100%
+			var wander_velocity = leash_wander_direction * speed * 0.4 * wander_factor
+			var pull_velocity = direction_to_player * speed * 0.3 * (1.0 - wander_factor)
+			velocity = wander_velocity + pull_velocity
+		else:
+			# Free to wander within leash range
+			velocity = leash_wander_direction * speed * 0.5
+
+	# Calculate resistance: only when leash is taut (>70%) AND player moving AWAY from Charlie
+	if leash_tension >= 0.7 and player_velocity.length() > 5:
+		var player_dir = player_velocity.normalized()
+		# direction_to_player points FROM Charlie TO Player
+		# If player moves in same direction as direction_to_player, they're moving AWAY from Charlie
+		# If player moves opposite to direction_to_player, they're moving TOWARD Charlie
+		var moving_away_factor = player_dir.dot(direction_to_player)
+
+		if moving_away_factor > 0.2:  # Player moving away from Charlie
+			# Resistance scales from 0 at 70% to full at 100%
+			var tension_factor = clampf((leash_tension - 0.7) / 0.3, 0.0, 1.0)
+			resistance_amount = tension_factor * moving_away_factor
+			is_resisting = resistance_amount > 0.1
 
 func _update_animation() -> void:
 	if not animated_sprite or not animated_sprite.sprite_frames:
@@ -362,7 +407,17 @@ func equip_leash() -> void:
 
 func remove_leash() -> void:
 	is_on_leash = false
+	is_resisting = false
+	resistance_amount = 0.0
 	current_state = State.FOLLOWING
+
+func is_leash_resisting() -> bool:
+	return is_on_leash and is_resisting
+
+func get_leash_resistance() -> float:
+	if is_on_leash:
+		return resistance_amount
+	return 0.0
 
 func take_ball_from_charlie() -> bool:
 	if has_ball:

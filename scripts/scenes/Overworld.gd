@@ -17,6 +17,9 @@ func _ready() -> void:
 	charlie.set_player(player)
 	charlie.equip_leash()
 
+	# Give player reference to Charlie for leash mechanics
+	player.set_charlie(charlie)
+
 	# Connect signals
 	player.interact_pressed.connect(_on_interact_pressed)
 	TimeWeather.time_updated.connect(_on_time_updated)
@@ -38,10 +41,29 @@ func _update_leash_visual() -> void:
 	if not leash_line:
 		return
 
-	# Draw line from player to Charlie
+	# Draw line from player's hand to Charlie's collar
 	leash_line.clear_points()
-	leash_line.add_point(player.global_position + Vector2(0, 10))
-	leash_line.add_point(charlie.global_position + Vector2(0, -5))
+
+	# Get player's hand position based on facing direction
+	var hand_offset = player.get_leash_hand_offset()
+	var player_leash_point = player.global_position + hand_offset
+
+	# Charlie's collar position (neck area, below head)
+	var charlie_leash_point = charlie.global_position + Vector2(0, -2)
+
+	leash_line.add_point(player_leash_point)
+	leash_line.add_point(charlie_leash_point)
+
+	# Change leash color and width based on resistance
+	var resistance = charlie.get_leash_resistance()
+	if resistance > 0.1:
+		# Taut/stressed - darker color, scales with resistance
+		var taut_color = Color(0.5, 0.25, 0.15, 1).lerp(Color(0.6, 0.2, 0.1, 1), resistance)
+		leash_line.default_color = taut_color
+		leash_line.width = 2.0 + resistance  # Slightly thicker when taut
+	else:
+		leash_line.default_color = Color(0.4, 0.3, 0.2, 1)  # Normal color
+		leash_line.width = 2.0
 
 func _update_interaction_prompt() -> void:
 	var player_pos = player.global_position
