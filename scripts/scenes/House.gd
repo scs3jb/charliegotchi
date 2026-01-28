@@ -194,11 +194,12 @@ func _send_to_basket() -> void:
 
 	hud.show_message("Charlie curls up in his basket. So cute!", 2.0)
 
-func _exit_basket() -> void:
+func _exit_basket(start_wander: bool = true) -> void:
 	charlie_in_basket = false
 	basket_rest_time = 0.0
 	basket_bonding_timer = 0.0
-	charlie.start_wandering()
+	if start_wander:
+		charlie.start_wandering()
 
 func _process_basket(delta: float) -> void:
 	if not charlie_in_basket:
@@ -232,6 +233,10 @@ func _throw_ball() -> void:
 	# Position ball at player before throwing
 	ball.global_position = player.global_position
 	ball.visible = true
+
+	# Cancel basket behavior if Charlie is in/going to basket
+	if charlie_in_basket:
+		_exit_basket(false)  # Don't start wandering, he'll fetch instead
 
 	# Interrupt Charlie if he was fetching
 	if charlie.current_state == charlie.State.FETCHING:
