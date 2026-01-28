@@ -5,6 +5,7 @@ extends Node2D
 @onready var charlie: CharacterBody2D = $Charlie
 @onready var food_bowl: Area2D = $FoodBowl
 @onready var pet_bed: Area2D = $PetBed
+@onready var charlie_basket: Area2D = $CharlieBasket
 @onready var ball: Area2D = $Ball
 @onready var door: Area2D = $Door
 @onready var hud: CanvasLayer = $HUD
@@ -31,8 +32,9 @@ func _ready() -> void:
 	# Update HUD with current stats
 	_update_hud()
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	_update_interaction_prompt()
+	_process_basket(delta)
 
 	# Check if ball stopped bouncing so Charlie can fetch
 	if waiting_for_ball_stop and "is_moving" in ball:
@@ -66,6 +68,16 @@ func _update_interaction_prompt() -> void:
 		closest_dist = dist
 		closest_name = "[E] Pet Charlie"
 		nearby_interactable = pet_bed
+
+	# Check distance to basket (send Charlie to rest or wake him)
+	dist = player_pos.distance_to(charlie_basket.global_position)
+	if dist < 45 and dist < closest_dist:
+		closest_dist = dist
+		if charlie_in_basket:
+			closest_name = "[E] Wake Charlie"
+		else:
+			closest_name = "[E] Send to Basket"
+		nearby_interactable = charlie_basket
 
 	# Check distance to ball - can throw if ball is visible (not in Charlie's mouth)
 	if ball.visible:
@@ -107,6 +119,8 @@ func _on_interact_pressed() -> void:
 		_feed_charlie()
 	elif nearby_interactable == pet_bed:
 		_pet_charlie()
+	elif nearby_interactable == charlie_basket:
+		_send_to_basket()
 	elif nearby_interactable == ball:
 		_throw_ball()
 	elif nearby_interactable == charlie and charlie.has_ball:
@@ -136,6 +150,77 @@ func _pet_charlie() -> void:
 
 	await get_tree().create_timer(2.0).timeout
 	charlie.start_wandering()
+
+var charlie_in_basket: bool = false
+var basket_rest_time: float = 0.0
+var basket_bonding_timer: float = 0.0
+const BASKET_MIN_TIME: float = 6.0  # Minimum 6 seconds in basket
+const BASKET_MAX_TIME: float = 15.0  # Maximum time before Charlie leaves on his own
+
+func _send_to_basket() -> void:
+	if charlie_in_basket:
+		# Wake Charlie up from basket
+		hud.show_message("Charlie hops out of his basket!", 2.0)
+		_exit_basket()
+		return
+
+	hud.show_message("Charlie trots to his cozy basket!", 2.0)
+
+	# Make Charlie go to the basket
+	charlie.target_position = charlie_basket.global_position
+	charlie.start_following()
+
+	# Wait for Charlie to actually reach the basket (check distance)
+	var wait_time = 0.0
+	var max_wait = 5.0  # Max time to wait for Charlie to reach basket
+	while wait_time < max_wait:
+		await get_tree().create_timer(0.1).timeout
+		wait_time += 0.1
+		var dist = charlie.global_position.distance_to(charlie_basket.global_position)
+		if dist < 25.0:
+			break
+
+	# Charlie has arrived - position him in the basket
+	charlie.global_position = charlie_basket.global_position
+	charlie.velocity = Vector2.ZERO
+	charlie.stop_moving()
+	charlie_in_basket = true
+	basket_rest_time = 0.0
+	basket_bonding_timer = 0.0
+
+	# Play idle animation (sitting/curled up)
+	if charlie.has_node("AnimatedSprite2D"):
+		charlie.get_node("AnimatedSprite2D").play("idle_down")
+
+	hud.show_message("Charlie curls up in his basket. So cute!", 2.0)
+
+func _exit_basket() -> void:
+	charlie_in_basket = false
+	basket_rest_time = 0.0
+	basket_bonding_timer = 0.0
+	charlie.start_wandering()
+
+func _process_basket(delta: float) -> void:
+	if not charlie_in_basket:
+		return
+
+	basket_rest_time += delta
+	basket_bonding_timer += delta
+
+	# Keep Charlie in position
+	charlie.global_position = charlie_basket.global_position
+	charlie.velocity = Vector2.ZERO
+
+	# Give 1% bonding per second
+	if basket_bonding_timer >= 1.0:
+		basket_bonding_timer -= 1.0
+		GameState.bonding = minf(GameState.bonding + 0.01, 1.0)
+		GameState.emit_signal("stats_changed")
+
+	# After max time, Charlie leaves on his own
+	if basket_rest_time >= BASKET_MAX_TIME:
+		hud.show_message("Charlie stretches and hops out of his basket.", 2.0)
+		_exit_basket()
 
 func _throw_ball() -> void:
 	ball_thrown = true

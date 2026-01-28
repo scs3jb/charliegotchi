@@ -38,6 +38,23 @@ var leash_wander_direction: Vector2 = Vector2.ZERO
 # Animation
 var facing_direction: String = "down"
 
+# Obstacle avoidance
+var stuck_timer: float = 0.0
+var last_position: Vector2 = Vector2.ZERO
+var avoidance_direction: Vector2 = Vector2.ZERO
+var is_avoiding: bool = false
+
+# Furniture collision rects for pathfinding (same as Ball.gd)
+var furniture_rects: Array = [
+	Rect2(5, 0, 115, 55),     # Kitchen counter area
+	Rect2(128, 130, 24, 20),  # Chair1
+	Rect2(248, 130, 24, 20),  # Chair2
+	Rect2(188, 90, 24, 20),   # Chair3
+	Rect2(188, 170, 24, 20),  # Chair4
+	Rect2(155, 115, 90, 50),  # Table
+	Rect2(350, 115, 60, 70),  # Sofa
+]
+
 signal reached_player
 signal picked_up_ball
 signal charlie_interacted
@@ -111,14 +128,108 @@ func _process_following(delta: float) -> void:
 	if not player_ref:
 		return
 
-	var distance_to_player = global_position.distance_to(player_ref.global_position)
+	# Use target_position if set, otherwise follow player
+	var target = target_position if target_position != Vector2.ZERO else player_ref.global_position
+	var distance_to_target = global_position.distance_to(target)
 
-	if distance_to_player > follow_distance:
-		var direction = (player_ref.global_position - global_position).normalized()
+	if distance_to_target > follow_distance:
+		var direction = (target - global_position).normalized()
+
+		# Check if stuck
+		if global_position.distance_to(last_position) < 1.0:
+			stuck_timer += delta
+		else:
+			stuck_timer = 0.0
+			is_avoiding = false
+
+		last_position = global_position
+
+		# If stuck, try to navigate around obstacle
+		if stuck_timer > 0.3:
+			direction = _get_avoidance_direction(target, delta)
+			is_avoiding = true
+
+		# Check for upcoming obstacles and steer around them
+		if not is_avoiding:
+			direction = _steer_around_obstacles(direction, delta)
+
 		velocity = direction * speed
 	else:
 		velocity = Vector2.ZERO
+		target_position = Vector2.ZERO  # Clear target when reached
+		stuck_timer = 0.0
+		is_avoiding = false
 		emit_signal("reached_player")
+
+func _get_avoidance_direction(target: Vector2, delta: float) -> Vector2:
+	"""When stuck, find a direction to go around the obstacle."""
+	var direct = (target - global_position).normalized()
+
+	# Try perpendicular directions
+	var perp_left = Vector2(-direct.y, direct.x)
+	var perp_right = Vector2(direct.y, -direct.x)
+
+	# Check which perpendicular direction is clearer
+	var left_clear = _is_direction_clear(perp_left, 40.0)
+	var right_clear = _is_direction_clear(perp_right, 40.0)
+
+	if left_clear and not right_clear:
+		avoidance_direction = perp_left
+	elif right_clear and not left_clear:
+		avoidance_direction = perp_right
+	elif left_clear and right_clear:
+		# Both clear, pick the one closer to target
+		var left_pos = global_position + perp_left * 40
+		var right_pos = global_position + perp_right * 40
+		if left_pos.distance_to(target) < right_pos.distance_to(target):
+			avoidance_direction = perp_left
+		else:
+			avoidance_direction = perp_right
+	else:
+		# Neither clear, try backing up slightly
+		avoidance_direction = -direct
+
+	# Blend avoidance with direct path
+	return (avoidance_direction * 0.8 + direct * 0.2).normalized()
+
+func _steer_around_obstacles(direction: Vector2, delta: float) -> Vector2:
+	"""Proactively steer around obstacles before getting stuck."""
+	var look_ahead = 30.0
+	var future_pos = global_position + direction * look_ahead
+	var charlie_rect = Rect2(future_pos.x - 10, future_pos.y - 6, 20, 12)
+
+	for furn_rect in furniture_rects:
+		if charlie_rect.intersects(furn_rect):
+			# Obstacle ahead, steer around it
+			var center = furn_rect.get_center()
+			var to_obstacle = center - global_position
+
+			# Steer perpendicular to obstacle
+			var perp = Vector2(-to_obstacle.y, to_obstacle.x).normalized()
+
+			# Choose the perpendicular that's more aligned with our target direction
+			if perp.dot(direction) < 0:
+				perp = -perp
+
+			return (direction * 0.4 + perp * 0.6).normalized()
+
+	return direction
+
+func _is_direction_clear(direction: Vector2, distance: float) -> bool:
+	"""Check if moving in a direction is clear of obstacles."""
+	var future_pos = global_position + direction * distance
+	var charlie_rect = Rect2(future_pos.x - 10, future_pos.y - 6, 20, 12)
+
+	# Check room bounds
+	if future_pos.x < 25 or future_pos.x > 400 or future_pos.y < 55 or future_pos.y > 275:
+		return false
+
+	# Check furniture
+	for furn_rect in furniture_rects:
+		if charlie_rect.intersects(furn_rect):
+			return false
+
+	return true
 
 func _process_wandering(delta: float) -> void:
 	wander_timer -= delta
@@ -140,21 +251,40 @@ func _process_wandering(delta: float) -> void:
 
 	velocity = wander_direction * speed * 0.5
 
-func _process_fetching(_delta: float) -> void:
+func _process_fetching(delta: float) -> void:
 	if not ball_ref:
 		current_state = State.IDLE
 		return
 
 	if not has_ball:
-		# Move toward ball
+		# Move toward ball with obstacle avoidance
 		var distance_to_ball = global_position.distance_to(ball_ref.global_position)
 		if distance_to_ball > 10:
 			var direction = (ball_ref.global_position - global_position).normalized()
+
+			# Check if stuck
+			if global_position.distance_to(last_position) < 1.0:
+				stuck_timer += delta
+			else:
+				stuck_timer = 0.0
+				is_avoiding = false
+
+			last_position = global_position
+
+			# Navigate around obstacles
+			if stuck_timer > 0.3:
+				direction = _get_avoidance_direction(ball_ref.global_position, delta)
+				is_avoiding = true
+			elif not is_avoiding:
+				direction = _steer_around_obstacles(direction, delta)
+
 			velocity = direction * speed * 1.2  # Faster when chasing ball
 		else:
 			# Pick up ball
 			has_ball = true
 			ball_ref.visible = false
+			stuck_timer = 0.0
+			is_avoiding = false
 			emit_signal("picked_up_ball")
 
 			# Check if Charlie returns ball or plays keep-away
@@ -166,16 +296,34 @@ func _process_fetching(_delta: float) -> void:
 				keep_away_timer = randf_range(5.0, 10.0)  # Play for 5-10 seconds
 				velocity = Vector2.ZERO
 	elif returning_ball and player_ref:
-		# Return ball to player
+		# Return ball to player with obstacle avoidance
 		var distance_to_player = global_position.distance_to(player_ref.global_position)
 		if distance_to_player > follow_distance:
 			var direction = (player_ref.global_position - global_position).normalized()
+
+			# Check if stuck
+			if global_position.distance_to(last_position) < 1.0:
+				stuck_timer += delta
+			else:
+				stuck_timer = 0.0
+				is_avoiding = false
+
+			last_position = global_position
+
+			if stuck_timer > 0.3:
+				direction = _get_avoidance_direction(player_ref.global_position, delta)
+				is_avoiding = true
+			elif not is_avoiding:
+				direction = _steer_around_obstacles(direction, delta)
+
 			velocity = direction * speed
 		else:
 			# Arrived at player
 			velocity = Vector2.ZERO
 			current_state = State.IDLE
 			returning_ball = false
+			stuck_timer = 0.0
+			is_avoiding = false
 	else:
 		velocity = Vector2.ZERO
 
@@ -269,9 +417,9 @@ func _process_keep_away(delta: float) -> void:
 				flee_direction = Vector2(randf_range(-1, 1), randf_range(-1, 1)).normalized()
 			velocity = flee_direction * speed * 0.35
 
-	# Clamp to room bounds
-	global_position.x = clampf(global_position.x, 30, 395)
-	global_position.y = clampf(global_position.y, 25, 210)
+	# Clamp to room bounds (updated for larger house)
+	global_position.x = clampf(global_position.x, 25, 400)
+	global_position.y = clampf(global_position.y, 60, 270)
 
 	# After timer expires, reset for next taunt cycle
 	if keep_away_timer <= 0:

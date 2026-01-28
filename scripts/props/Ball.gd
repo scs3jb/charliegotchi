@@ -7,11 +7,19 @@ class_name Ball
 @export var min_velocity: float = 8.0
 @export var bounce_gravity: float = 200.0  # Simulated gravity for bounce effect
 
-# Room bounds (walls)
-var bounds_left: float = 25.0
-var bounds_right: float = 400.0
-var bounds_top: float = 18.0
-var bounds_bottom: float = 222.0
+# Room bounds (walls) - updated for larger house
+var bounds_left: float = 20.0
+var bounds_right: float = 405.0
+var bounds_top: float = 55.0
+var bounds_bottom: float = 275.0
+
+# Furniture collision rects (x, y, width, height)
+var furniture_rects: Array = [
+	Rect2(5, 0, 115, 50),     # Kitchen counter area
+	Rect2(155, 115, 90, 50),  # Table
+	Rect2(350, 115, 60, 70),  # Sofa
+	Rect2(328, 210, 64, 40),  # Basket
+]
 
 # Physics
 var ball_velocity: Vector2 = Vector2.ZERO
@@ -53,35 +61,67 @@ func _physics_process(delta: float) -> void:
 		else:
 			bounce_velocity = 0
 
-	# Apply velocity to position
-	global_position += ball_velocity * delta
-
-	# Bounce off walls with realistic physics
+	# Calculate new position
+	var new_pos = global_position + ball_velocity * delta
 	var bounced = false
 
-	if global_position.x <= bounds_left:
-		global_position.x = bounds_left
+	# Bounce off walls with realistic physics
+	if new_pos.x <= bounds_left:
+		new_pos.x = bounds_left
 		ball_velocity.x = abs(ball_velocity.x) * bounce_factor
-		bounce_velocity = max(bounce_velocity, 80)  # Add vertical bounce on wall hit
+		bounce_velocity = max(bounce_velocity, 80)
 		bounced = true
 		spin = -abs(spin) - ball_velocity.length() * 0.1
-	elif global_position.x >= bounds_right:
-		global_position.x = bounds_right
+	elif new_pos.x >= bounds_right:
+		new_pos.x = bounds_right
 		ball_velocity.x = -abs(ball_velocity.x) * bounce_factor
 		bounce_velocity = max(bounce_velocity, 80)
 		bounced = true
 		spin = abs(spin) + ball_velocity.length() * 0.1
 
-	if global_position.y <= bounds_top:
-		global_position.y = bounds_top
+	if new_pos.y <= bounds_top:
+		new_pos.y = bounds_top
 		ball_velocity.y = abs(ball_velocity.y) * bounce_factor
 		bounce_velocity = max(bounce_velocity, 60)
 		bounced = true
-	elif global_position.y >= bounds_bottom:
-		global_position.y = bounds_bottom
+	elif new_pos.y >= bounds_bottom:
+		new_pos.y = bounds_bottom
 		ball_velocity.y = -abs(ball_velocity.y) * bounce_factor
 		bounce_velocity = max(bounce_velocity, 60)
 		bounced = true
+
+	# Check furniture collisions
+	var ball_rect = Rect2(new_pos.x - 6, new_pos.y - 6, 12, 12)
+	for furn_rect in furniture_rects:
+		if ball_rect.intersects(furn_rect):
+			# Determine which side we hit and bounce accordingly
+			var center = furn_rect.get_center()
+			var from_center = new_pos - center
+
+			# Determine if horizontal or vertical collision
+			var overlap_x = (ball_rect.size.x / 2 + furn_rect.size.x / 2) - abs(from_center.x)
+			var overlap_y = (ball_rect.size.y / 2 + furn_rect.size.y / 2) - abs(from_center.y)
+
+			if overlap_x < overlap_y:
+				# Horizontal bounce
+				ball_velocity.x = -ball_velocity.x * bounce_factor
+				if from_center.x < 0:
+					new_pos.x = furn_rect.position.x - 8
+				else:
+					new_pos.x = furn_rect.position.x + furn_rect.size.x + 8
+			else:
+				# Vertical bounce
+				ball_velocity.y = -ball_velocity.y * bounce_factor
+				if from_center.y < 0:
+					new_pos.y = furn_rect.position.y - 8
+				else:
+					new_pos.y = furn_rect.position.y + furn_rect.size.y + 8
+
+			bounce_velocity = max(bounce_velocity, 50)
+			bounced = true
+			break
+
+	global_position = new_pos
 
 	if bounced:
 		emit_signal("ball_bounced")
