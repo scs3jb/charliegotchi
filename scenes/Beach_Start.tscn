@@ -374,6 +374,46 @@ limit_top = 0
 limit_right = 426
 limit_bottom = 240
 
+[node name="ThrownSteak" type="Node2D" parent="."]
+visible = false
+position = Vector2(80, 140)
+z_index = 10
+
+[node name="SteakMain" type="ColorRect" parent="ThrownSteak"]
+offset_left = -8.0
+offset_top = -5.0
+offset_right = 8.0
+offset_bottom = 5.0
+color = Color(0.65, 0.22, 0.18, 1)
+
+[node name="SteakFat" type="ColorRect" parent="ThrownSteak"]
+offset_left = -6.0
+offset_top = -6.0
+offset_right = 6.0
+offset_bottom = -4.0
+color = Color(0.95, 0.92, 0.85, 1)
+
+[node name="SteakMarble1" type="ColorRect" parent="ThrownSteak"]
+offset_left = -4.0
+offset_top = -2.0
+offset_right = -2.0
+offset_bottom = 0.0
+color = Color(0.9, 0.85, 0.8, 0.6)
+
+[node name="SteakMarble2" type="ColorRect" parent="ThrownSteak"]
+offset_left = 2.0
+offset_top = 1.0
+offset_right = 5.0
+offset_bottom = 3.0
+color = Color(0.9, 0.85, 0.8, 0.5)
+
+[node name="SteakBone" type="ColorRect" parent="ThrownSteak"]
+offset_left = 6.0
+offset_top = -2.0
+offset_right = 10.0
+offset_bottom = 2.0
+color = Color(0.95, 0.93, 0.88, 1)
+
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="DialoguePanel" type="Panel" parent="CanvasLayer"]

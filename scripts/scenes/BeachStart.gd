@@ -9,6 +9,7 @@ extends Node2D
 @onready var interaction_prompt: Label = $CanvasLayer/InteractionPrompt
 @onready var food_minigame: Control = $CanvasLayer/FoodMiniGame
 @onready var food_progress: ProgressBar = $CanvasLayer/FoodMiniGame/ProgressBar
+@onready var thrown_steak: Node2D = $ThrownSteak
 
 enum BeachState { EXPLORING, FOUND_BOX, MINIGAME, CHARLIE_OUT, PICKUP_CHARLIE, GOING_HOME }
 var current_state: BeachState = BeachState.EXPLORING
@@ -16,6 +17,7 @@ var current_state: BeachState = BeachState.EXPLORING
 var dialogue_queue: Array = []
 var food_clicks: int = 0
 const FOOD_CLICKS_NEEDED: int = 5
+var is_throwing: bool = false
 
 func _ready() -> void:
 	# Connect player interaction
@@ -112,6 +114,44 @@ func _start_food_minigame() -> void:
 	player.set_can_move(false)
 
 func _on_food_clicked() -> void:
+	if is_throwing:
+		return
+
+	is_throwing = true
+	_throw_steak_to_box()
+
+func _throw_steak_to_box() -> void:
+	# Position steak at player's hand
+	var start_pos = player.global_position + Vector2(8, -4)
+	var end_pos = box.global_position + Vector2(0, -5)
+
+	thrown_steak.global_position = start_pos
+	thrown_steak.visible = true
+	thrown_steak.rotation = 0
+
+	# Create arc animation using tweens
+	var tween = create_tween()
+	tween.set_parallel(true)
+
+	# Horizontal movement
+	tween.tween_property(thrown_steak, "global_position:x", end_pos.x, 0.5).set_ease(Tween.EASE_OUT)
+
+	# Vertical arc (go up then down)
+	var arc_height = -40.0
+	var mid_y = min(start_pos.y, end_pos.y) + arc_height
+	tween.tween_property(thrown_steak, "global_position:y", mid_y, 0.25).set_ease(Tween.EASE_OUT)
+	tween.chain().tween_property(thrown_steak, "global_position:y", end_pos.y, 0.25).set_ease(Tween.EASE_IN)
+
+	# Spin the steak
+	tween.tween_property(thrown_steak, "rotation", TAU, 0.5)
+
+	# When animation finishes
+	tween.chain().tween_callback(_on_steak_landed)
+
+func _on_steak_landed() -> void:
+	thrown_steak.visible = false
+	is_throwing = false
+
 	food_clicks += 1
 	food_progress.value = (float(food_clicks) / FOOD_CLICKS_NEEDED) * 100
 
