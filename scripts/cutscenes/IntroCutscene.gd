@@ -5,6 +5,7 @@ extends Control
 @onready var sky: ColorRect = $SceneContent/Sky
 @onready var lightning_flash: ColorRect = $SceneContent/LightningFlash
 @onready var cloud_layer: Node2D = $SceneContent/CloudLayer
+@onready var cloud_layer2: Node2D = $SceneContent/CloudLayer2
 @onready var ocean: Node2D = $SceneContent/Ocean
 @onready var raft: Node2D = $SceneContent/Raft
 @onready var charlie: Node2D = $SceneContent/Raft/Box/Charlie
@@ -44,7 +45,11 @@ var phase_durations = [4.0, 4.0, 4.0, 3.0, 4.0, 4.0, 4.0, 3.0]
 
 func _ready() -> void:
 	raft_base_y = raft.position.y
+	sky.color = Color(0, 0, 0, 1) # Night sky
+	sky.modulate = Color(1, 1, 1, 1) # Ensure no unintended tinting
+	raft.modulate = Color(1, 1, 1, 1) # Ensure raft is fully opaque
 	_advance_narration(0)
+	cloud_layer2.position.x = cloud_layer.position.x + get_viewport_rect().size.x
 
 func _process(delta: float) -> void:
 	phase_timer += delta
@@ -92,8 +97,12 @@ func _animate_wind(delta: float) -> void:
 
 func _animate_clouds(delta: float) -> void:
 	cloud_layer.position.x += 15.0 * delta * storm_intensity
-	if cloud_layer.position.x > 300:
-		cloud_layer.position.x = 100
+	cloud_layer2.position.x += 15.0 * delta * storm_intensity
+	
+	if cloud_layer.position.x > get_viewport_rect().size.x + 200:
+		cloud_layer.position.x = cloud_layer2.position.x - get_viewport_rect().size.x
+	if cloud_layer2.position.x > get_viewport_rect().size.x + 200:
+		cloud_layer2.position.x = cloud_layer.position.x - get_viewport_rect().size.x
 
 func _animate_charlie_shiver(delta: float) -> void:
 	if storm_intensity > 0.3:
@@ -120,19 +129,11 @@ func _transition_to_calm(delta: float) -> void:
 
 	# Reduce rain
 	if rain_heavy:
-		rain_heavy.amount = int(300 * storm_intensity)
-		if storm_intensity < 0.1:
-			rain_heavy.emitting = false
-
+		rain_heavy.emitting = storm_intensity > 0.1
 	if rain_light:
-		rain_light.amount = int(150 * storm_intensity)
-		if storm_intensity < 0.2:
-			rain_light.emitting = false
-
+		rain_light.emitting = storm_intensity > 0.2
 	if spray_particles:
-		spray_particles.amount = int(50 * storm_intensity)
-		if storm_intensity < 0.15:
-			spray_particles.emitting = false
+		spray_particles.emitting = storm_intensity > 0.15
 
 	# Lighten sky
 	if sky:
