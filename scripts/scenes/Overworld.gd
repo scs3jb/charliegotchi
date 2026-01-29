@@ -9,6 +9,7 @@ extends Node2D
 @onready var hud: CanvasLayer = $HUD
 @onready var interaction_prompt: Label = $HUD/InteractionPrompt
 @onready var weather_label: Label = $HUD/MarginContainer/VBoxContainer/WeatherLabel
+@onready var wildlife_spawner: Node2D = $WildlifeSpawner
 
 var nearby_interactable: Node = null
 
@@ -19,6 +20,12 @@ func _ready() -> void:
 
 	# Give player reference to Charlie for leash mechanics
 	player.set_charlie(charlie)
+
+	# Set up wildlife spawner
+	if wildlife_spawner:
+		wildlife_spawner.set_charlie(charlie)
+		wildlife_spawner.set_player(player)
+		charlie.set_wildlife_spawner(wildlife_spawner)
 
 	# Connect signals
 	player.interact_pressed.connect(_on_interact_pressed)
@@ -54,13 +61,26 @@ func _update_leash_visual() -> void:
 	leash_line.add_point(player_leash_point)
 	leash_line.add_point(charlie_leash_point)
 
-	# Change leash color and width based on resistance
+	# Get excitement level for wildlife
+	var excitement = charlie.get_wildlife_excitement() if charlie.has_method("get_wildlife_excitement") else 0.0
+
+	# Change leash color and width based on resistance and excitement
 	var resistance = charlie.get_leash_resistance()
 	if resistance > 0.1:
 		# Taut/stressed - darker color, scales with resistance
 		var taut_color = Color(0.5, 0.25, 0.15, 1).lerp(Color(0.6, 0.2, 0.1, 1), resistance)
+		# Add orange tint when excited about wildlife
+		if excitement > 0.2:
+			var excited_color = Color(0.9, 0.5, 0.1, 1)  # Orange
+			taut_color = taut_color.lerp(excited_color, excitement * 0.5)
 		leash_line.default_color = taut_color
 		leash_line.width = 2.0 + resistance  # Slightly thicker when taut
+	elif excitement > 0.2:
+		# Not taut but excited - show orange tint
+		var normal_color = Color(0.4, 0.3, 0.2, 1)
+		var excited_color = Color(0.8, 0.5, 0.2, 1)  # Light orange
+		leash_line.default_color = normal_color.lerp(excited_color, excitement * 0.6)
+		leash_line.width = 2.0
 	else:
 		leash_line.default_color = Color(0.4, 0.3, 0.2, 1)  # Normal color
 		leash_line.width = 2.0

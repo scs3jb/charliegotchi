@@ -35,6 +35,12 @@ var resistance_amount: float = 0.0  # 0.0 to 1.0, how much Charlie is resisting
 var leash_wander_timer: float = 0.0
 var leash_wander_direction: Vector2 = Vector2.ZERO
 
+# Wildlife attraction
+var attracted_to_wildlife: Node2D = null
+var wildlife_excitement: float = 0.0  # 0.0 to 1.0
+var wildlife_attraction_radius: float = 120.0
+var wildlife_spawner_ref: Node = null
+
 # Animation
 var facing_direction: String = "down"
 
@@ -442,17 +448,37 @@ func _process_on_leash(delta: float) -> void:
 	is_resisting = false
 	resistance_amount = 0.0
 
-	# High bonding (>= 0.5): Charlie follows the player nicely
+	# Check for nearby wildlife
+	_check_wildlife_attraction(delta)
+
+	# Calculate how distracted Charlie is by wildlife
+	# Higher bonding = less distraction (trained dogs focus better)
+	var distraction_factor = wildlife_excitement * (1.0 - GameState.bonding * 0.7)
+
+	# High bonding (>= 0.5): Charlie follows the player nicely (but may be distracted)
 	if GameState.bonding >= 0.5:
 		# Match player position with offset
 		var target = player_ref.global_position + Vector2(20, 20)
-		if global_position.distance_to(target) > 5:
-			var direction = (target - global_position).normalized()
-			velocity = direction * speed
+
+		# If attracted to wildlife, bias toward it
+		if attracted_to_wildlife and is_instance_valid(attracted_to_wildlife) and distraction_factor > 0.2:
+			var wildlife_dir = (attracted_to_wildlife.global_position - global_position).normalized()
+			var player_dir = (target - global_position).normalized()
+			# Blend between player and wildlife based on distraction
+			var blended_dir = (player_dir * (1.0 - distraction_factor) + wildlife_dir * distraction_factor).normalized()
+
+			if global_position.distance_to(target) > 5:
+				velocity = blended_dir * speed * (1.0 + distraction_factor * 0.5)  # Slightly faster when excited
+			else:
+				velocity = wildlife_dir * speed * distraction_factor * 0.5  # Pull toward wildlife
 		else:
-			velocity = Vector2.ZERO
+			if global_position.distance_to(target) > 5:
+				var direction = (target - global_position).normalized()
+				velocity = direction * speed
+			else:
+				velocity = Vector2.ZERO
 	else:
-		# Low bonding: Charlie wanders randomly
+		# Low bonding: Charlie wanders randomly (or toward wildlife)
 		leash_wander_timer -= delta
 
 		if leash_wander_timer <= 0:
@@ -462,6 +488,10 @@ func _process_on_leash(delta: float) -> void:
 			else:
 				leash_wander_direction = Vector2(randf_range(-1, 1), randf_range(-1, 1)).normalized()
 			leash_wander_timer = randf_range(1.0, 3.0)
+
+		# If attracted to wildlife, override wander direction
+		if attracted_to_wildlife and is_instance_valid(attracted_to_wildlife) and distraction_factor > 0.3:
+			leash_wander_direction = (attracted_to_wildlife.global_position - global_position).normalized()
 
 		# Movement based on leash tension
 		if distance_to_player >= leash_max_distance:
@@ -475,7 +505,10 @@ func _process_on_leash(delta: float) -> void:
 			velocity = wander_velocity + pull_velocity
 		else:
 			# Free to wander within leash range
-			velocity = leash_wander_direction * speed * 0.5
+			var wander_speed = speed * 0.5
+			if distraction_factor > 0.3:
+				wander_speed = speed * 0.8  # Faster when excited about wildlife
+			velocity = leash_wander_direction * wander_speed
 
 	# Calculate resistance: only when leash is taut (>70%) AND player moving AWAY from Charlie
 	if leash_tension >= 0.7 and player_velocity.length() > 5:
@@ -489,6 +522,12 @@ func _process_on_leash(delta: float) -> void:
 			# Resistance scales from 0 at 70% to full at 100%
 			var tension_factor = clampf((leash_tension - 0.7) / 0.3, 0.0, 1.0)
 			resistance_amount = tension_factor * moving_away_factor
+
+			# Extra resistance if Charlie is excited about wildlife
+			if distraction_factor > 0.3:
+				resistance_amount += distraction_factor * 0.3
+
+			resistance_amount = clampf(resistance_amount, 0.0, 1.0)
 			is_resisting = resistance_amount > 0.1
 
 			# When at max leash length, Charlie gets dragged reluctantly
@@ -499,6 +538,33 @@ func _process_on_leash(delta: float) -> void:
 				# Maximum resistance when being dragged
 				resistance_amount = 1.0
 				is_resisting = true
+
+func _check_wildlife_attraction(delta: float) -> void:
+	# Find nearest wildlife within attraction radius
+	attracted_to_wildlife = null
+
+	if wildlife_spawner_ref and wildlife_spawner_ref.has_method("get_nearest_wildlife_to"):
+		var nearest = wildlife_spawner_ref.get_nearest_wildlife_to(global_position)
+		if nearest and is_instance_valid(nearest):
+			var dist = global_position.distance_to(nearest.global_position)
+			if dist < wildlife_attraction_radius:
+				attracted_to_wildlife = nearest
+
+	# Update excitement level
+	if attracted_to_wildlife:
+		# Excitement builds when wildlife is nearby
+		var distance = global_position.distance_to(attracted_to_wildlife.global_position)
+		var closeness = 1.0 - (distance / wildlife_attraction_radius)
+		wildlife_excitement = lerpf(wildlife_excitement, closeness, delta * 3.0)
+	else:
+		# Excitement fades when no wildlife
+		wildlife_excitement = lerpf(wildlife_excitement, 0.0, delta * 2.0)
+
+func set_wildlife_spawner(spawner: Node) -> void:
+	wildlife_spawner_ref = spawner
+
+func get_wildlife_excitement() -> float:
+	return wildlife_excitement
 
 func _update_animation() -> void:
 	if not animated_sprite or not animated_sprite.sprite_frames:
