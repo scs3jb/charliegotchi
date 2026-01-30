@@ -34,6 +34,7 @@ var charlie_found: bool = false
 var charlie_coaxed: bool = false
 var charlie_trusts_player: bool = false  # Unlocks outdoor exploration
 var first_sleep_complete: bool = false
+var first_overworld_complete: bool = false  # First time exploring outside
 
 # Fetch game progress
 var fetch_attempts: int = 0
@@ -164,6 +165,7 @@ func save_game() -> void:
 		"charlie_coaxed": charlie_coaxed,
 		"charlie_trusts_player": charlie_trusts_player,
 		"first_sleep_complete": first_sleep_complete,
+		"first_overworld_complete": first_overworld_complete,
 		"fetch_attempts": fetch_attempts,
 		"charlie_returns_ball": charlie_returns_ball,
 		"feed_count": feed_count,
@@ -206,6 +208,7 @@ func load_game() -> bool:
 		charlie_coaxed = save_data.get("charlie_coaxed", false)
 		charlie_trusts_player = save_data.get("charlie_trusts_player", false)
 		first_sleep_complete = save_data.get("first_sleep_complete", false)
+		first_overworld_complete = save_data.get("first_overworld_complete", false)
 		fetch_attempts = save_data.get("fetch_attempts", 0)
 		charlie_returns_ball = save_data.get("charlie_returns_ball", false)
 		feed_count = save_data.get("feed_count", 0)
@@ -236,6 +239,7 @@ func reset_game() -> void:
 	charlie_coaxed = false
 	charlie_trusts_player = false
 	first_sleep_complete = false
+	first_overworld_complete = false
 	fetch_attempts = 0
 	charlie_returns_ball = false
 	feed_count = 0

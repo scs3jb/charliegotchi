@@ -10,8 +10,12 @@ extends Node2D
 @onready var interaction_prompt: Label = $HUD/InteractionPrompt
 @onready var weather_label: Label = $HUD/MarginContainer/VBoxContainer/WeatherLabel
 @onready var wildlife_spawner: Node2D = $WildlifeSpawner
+@onready var message_panel: Panel = $HUD/MessagePanel
+@onready var message_label: Label = $HUD/MessagePanel/MessageLabel
 
 var nearby_interactable: Node = null
+var dialogue_queue: Array = []
+var is_showing_dialogue: bool = false
 
 func _ready() -> void:
 	# Set up Charlie with leash
@@ -38,6 +42,10 @@ func _ready() -> void:
 	# Initial update
 	_update_weather_display()
 	_update_ambient_lighting()
+
+	# First time visiting the overworld - show welcome message
+	if not GameState.first_overworld_complete:
+		_show_first_visit_welcome()
 
 func _process(_delta: float) -> void:
 	_update_leash_visual()
@@ -93,6 +101,12 @@ func _update_leash_visual() -> void:
 		leash_line.width = 2.0
 
 func _update_interaction_prompt() -> void:
+	# Show continue prompt during dialogue
+	if is_showing_dialogue:
+		interaction_prompt.text = "[E] Continue"
+		interaction_prompt.visible = true
+		return
+
 	var player_pos = player.global_position
 	nearby_interactable = null
 
@@ -115,6 +129,11 @@ func _update_interaction_prompt() -> void:
 	interaction_prompt.visible = false
 
 func _on_interact_pressed() -> void:
+	# Handle dialogue advancement first
+	if is_showing_dialogue:
+		_advance_dialogue()
+		return
+
 	if nearby_interactable == charlie:
 		charlie.interact(player)
 	elif nearby_interactable == house:
@@ -137,3 +156,40 @@ func _update_weather_display() -> void:
 func _update_ambient_lighting() -> void:
 	if ambient_light:
 		ambient_light.color = TimeWeather.current_ambient
+
+func _show_first_visit_welcome() -> void:
+	# Reset bonding to 0 for first outdoor adventure
+	GameState.bonding = 0.0
+	GameState.emit_signal("stats_changed")
+
+	# Show welcome dialogue
+	dialogue_queue = [
+		"Welcome to the island, Charlie!",
+		"This is your new home. Feel free to explore!",
+		"Charlie is still getting used to you...",
+		"He might get distracted by birds and squirrels.",
+		"Spend time with Charlie to increase your bond.",
+		"The stronger your bond, the less distracted he'll be!"
+	]
+	_show_next_dialogue()
+
+func _show_next_dialogue() -> void:
+	if dialogue_queue.size() > 0:
+		message_label.text = dialogue_queue.pop_front()
+		message_panel.visible = true
+		is_showing_dialogue = true
+		player.set_can_move(false)
+	else:
+		message_panel.visible = false
+		is_showing_dialogue = false
+		player.set_can_move(true)
+		_on_dialogue_finished()
+
+func _advance_dialogue() -> void:
+	_show_next_dialogue()
+
+func _on_dialogue_finished() -> void:
+	# Mark first overworld visit as complete
+	if not GameState.first_overworld_complete:
+		GameState.first_overworld_complete = true
+		GameState.save_game()
