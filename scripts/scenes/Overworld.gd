@@ -36,9 +36,6 @@ func _ready() -> void:
 	TimeWeather.time_updated.connect(_on_time_updated)
 	TimeWeather.weather_changed.connect(_on_weather_changed)
 
-	# Resume time if paused
-	TimeWeather.resume_time()
-
 	# Initial update
 	_update_weather_display()
 	_update_ambient_lighting()
@@ -192,4 +189,5 @@ func _on_dialogue_finished() -> void:
 	# Mark first overworld visit as complete
 	if not GameState.first_overworld_complete:
 		GameState.first_overworld_complete = true
+		TimeWeather.start_time_for_overworld()
 		GameState.save_game()

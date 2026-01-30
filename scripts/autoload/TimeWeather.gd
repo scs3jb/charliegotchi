@@ -5,8 +5,10 @@ enum Season { SPRING, SUMMER, AUTUMN, WINTER }
 enum Weather { CLEAR, RAIN, SNOW, STORM, WINDY }
 
 # Time settings
-var time_scale: float = 15.0  # 1 real second = 0.25 game minutes (day lasts ~96 real minutes)
+var day_time_scale: float = 7.5 # 1 real second = 0.125 game minutes (day lasts ~112 real minutes)
+var night_time_scale: float = 15.0 # 1 real second = 0.25 game minutes (night lasts ~40 real minutes)
 var is_time_paused: bool = false
+var time_active: bool = false
 
 # Current state
 var current_season: Season = Season.SPRING
@@ -25,14 +27,16 @@ signal weather_changed(weather: Weather)
 
 func _ready() -> void:
 	print("TimeWeather initialized")
+	is_time_paused = true
 	_update_ambient_light()
 
 func _process(delta: float) -> void:
-	if is_time_paused:
+	if is_time_paused or not GameState.first_overworld_complete:
 		return
 
 	# Advance time
-	GameState.current_hour += (delta * time_scale) / 60.0
+	var current_time_scale = day_time_scale if is_daytime() else night_time_scale
+	GameState.current_hour += (delta * current_time_scale) / 60.0
 
 	# Handle day rollover
 	if GameState.current_hour >= 24.0:
@@ -44,6 +48,12 @@ func _process(delta: float) -> void:
 
 	_update_ambient_light()
 	emit_signal("time_updated", GameState.current_hour)
+
+func start_time_for_overworld() -> void:
+	GameState.current_hour = 9.0
+	time_active = true
+	is_time_paused = false
+
 
 func _advance_day() -> void:
 	GameState.current_day += 1
@@ -132,6 +142,8 @@ func skip_to_morning() -> void:
 	_update_ambient_light()
 
 func get_time_string() -> String:
+	if not time_active:
+		return ""
 	var hour = int(GameState.current_hour)
 	var minute = int((GameState.current_hour - hour) * 60)
 	var am_pm = "AM" if hour < 12 else "PM"
@@ -154,3 +166,14 @@ func is_raining() -> bool:
 
 func is_snowing() -> bool:
 	return current_weather == Weather.SNOW
+
+func restore_time_state() -> void:
+	if GameState.first_overworld_complete:
+		time_active = true
+		is_time_paused = false
+	else:
+		time_active = false
+		is_time_paused = true
+	
+	_update_ambient_light()
+	emit_signal("time_updated", GameState.current_hour)

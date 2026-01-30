@@ -14,6 +14,7 @@ func _on_new_game_pressed() -> void:
 
 func _on_continue_pressed() -> void:
 	if GameState.load_game():
+		TimeWeather.restore_time_state()
 		# Go to appropriate scene based on progress
 		match GameState.current_phase:
 			0:

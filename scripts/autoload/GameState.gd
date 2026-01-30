@@ -214,8 +214,13 @@ func load_game() -> bool:
 		feed_count = save_data.get("feed_count", 0)
 		pet_count = save_data.get("pet_count", 0)
 		fetch_success_count = save_data.get("fetch_success_count", 0)
-		current_day = save_data.get("current_day", 1)
-		current_hour = save_data.get("current_hour", 8.0)
+
+		if first_overworld_complete:
+			current_day = save_data.get("current_day", 1)
+			current_hour = save_data.get("current_hour", 8.0)
+		else:
+			current_day = 1
+			current_hour = 8.0
 
 		emit_signal("stats_changed")
 		print("Game loaded!")

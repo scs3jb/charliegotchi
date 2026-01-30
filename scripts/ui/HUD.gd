@@ -14,6 +14,7 @@ func _ready() -> void:
 	GameState.stats_changed.connect(_on_stats_changed)
 	GameState.charlie_trust_unlocked.connect(_on_trust_unlocked)
 	TimeWeather.time_updated.connect(_on_time_updated)
+	_on_time_updated(0.0)
 
 	_update_stats_display()
 	hide_interaction_prompt()
@@ -36,7 +37,9 @@ func _update_stats_display() -> void:
 
 func _on_time_updated(_hour: float) -> void:
 	if time_label:
-		time_label.text = TimeWeather.get_time_string()
+		var time_string = TimeWeather.get_time_string()
+		time_label.text = time_string
+		time_label.visible = not time_string.is_empty()
 
 func _on_trust_unlocked() -> void:
 	show_message("Charlie now trusts you enough to explore outside!", 5.0)
