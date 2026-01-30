@@ -478,37 +478,54 @@ func _process_on_leash(delta: float) -> void:
 			else:
 				velocity = Vector2.ZERO
 	else:
-		# Low bonding: Charlie wanders randomly (or toward wildlife)
-		leash_wander_timer -= delta
+		# Low bonding: Charlie is easily distracted and actively chases wildlife
+		var is_chasing_wildlife = attracted_to_wildlife and is_instance_valid(attracted_to_wildlife) and distraction_factor > 0.1
 
-		if leash_wander_timer <= 0:
-			# Pick new random direction or stop
-			if randf() < 0.3:
-				leash_wander_direction = Vector2.ZERO
+		if is_chasing_wildlife:
+			# Actively chase wildlife - low bonding dogs are very distracted!
+			var wildlife_dir = (attracted_to_wildlife.global_position - global_position).normalized()
+			var chase_speed = speed * (1.0 + distraction_factor * 0.5)  # Faster when more excited
+
+			# Movement based on leash tension - but still try to chase
+			if distance_to_player >= leash_max_distance:
+				# At max leash length - blend between chasing and being pulled back
+				# Low bonding = still tries to chase even when leash is maxed
+				var chase_factor = 0.4 * distraction_factor  # Still pulls toward wildlife
+				velocity = (wildlife_dir * chase_factor + direction_to_player * (1.0 - chase_factor)).normalized() * speed * 0.4
+			elif leash_tension > 0.7:
+				# Leash getting tight but Charlie still wants the wildlife
+				var tension_blend = (leash_tension - 0.7) / 0.3  # 0 at 70%, 1 at 100%
+				var chase_velocity = wildlife_dir * chase_speed
+				var constrained_velocity = direction_to_player * speed * 0.3
+				velocity = chase_velocity.lerp(constrained_velocity, tension_blend * 0.6)
 			else:
-				leash_wander_direction = Vector2(randf_range(-1, 1), randf_range(-1, 1)).normalized()
-			leash_wander_timer = randf_range(1.0, 3.0)
-
-		# If attracted to wildlife, override wander direction
-		if attracted_to_wildlife and is_instance_valid(attracted_to_wildlife) and distraction_factor > 0.3:
-			leash_wander_direction = (attracted_to_wildlife.global_position - global_position).normalized()
-
-		# Movement based on leash tension
-		if distance_to_player >= leash_max_distance:
-			# At max leash length - must follow player, can't go further
-			velocity = direction_to_player * speed * 0.5
-		elif leash_tension > 0.7:
-			# Getting tight - reduce wandering, bias toward player
-			var wander_factor = 1.0 - ((leash_tension - 0.7) / 0.3)  # 1.0 at 70%, 0.0 at 100%
-			var wander_velocity = leash_wander_direction * speed * 0.4 * wander_factor
-			var pull_velocity = direction_to_player * speed * 0.3 * (1.0 - wander_factor)
-			velocity = wander_velocity + pull_velocity
+				# Free to chase!
+				velocity = wildlife_dir * chase_speed
 		else:
-			# Free to wander within leash range
-			var wander_speed = speed * 0.5
-			if distraction_factor > 0.3:
-				wander_speed = speed * 0.8  # Faster when excited about wildlife
-			velocity = leash_wander_direction * wander_speed
+			# No wildlife nearby - normal wandering behavior
+			leash_wander_timer -= delta
+
+			if leash_wander_timer <= 0:
+				# Pick new random direction or stop
+				if randf() < 0.3:
+					leash_wander_direction = Vector2.ZERO
+				else:
+					leash_wander_direction = Vector2(randf_range(-1, 1), randf_range(-1, 1)).normalized()
+				leash_wander_timer = randf_range(1.0, 3.0)
+
+			# Movement based on leash tension
+			if distance_to_player >= leash_max_distance:
+				# At max leash length - must follow player, can't go further
+				velocity = direction_to_player * speed * 0.5
+			elif leash_tension > 0.7:
+				# Getting tight - reduce wandering, bias toward player
+				var wander_factor = 1.0 - ((leash_tension - 0.7) / 0.3)  # 1.0 at 70%, 0.0 at 100%
+				var wander_velocity = leash_wander_direction * speed * 0.4 * wander_factor
+				var pull_velocity = direction_to_player * speed * 0.3 * (1.0 - wander_factor)
+				velocity = wander_velocity + pull_velocity
+			else:
+				# Free to wander within leash range
+				velocity = leash_wander_direction * speed * 0.5
 
 	# Calculate resistance: only when leash is taut (>70%) AND player moving AWAY from Charlie
 	if leash_tension >= 0.7 and player_velocity.length() > 5:
@@ -524,8 +541,13 @@ func _process_on_leash(delta: float) -> void:
 			resistance_amount = tension_factor * moving_away_factor
 
 			# Extra resistance if Charlie is excited about wildlife
-			if distraction_factor > 0.3:
-				resistance_amount += distraction_factor * 0.3
+			# Low bonding + wildlife = much more resistance!
+			if distraction_factor > 0.1:
+				var wildlife_resistance = distraction_factor * 0.5
+				# Low bonding amplifies wildlife distraction resistance
+				if GameState.bonding < 0.5:
+					wildlife_resistance *= (1.5 - GameState.bonding)  # Up to 1.5x at 0 bonding
+				resistance_amount += wildlife_resistance
 
 			resistance_amount = clampf(resistance_amount, 0.0, 1.0)
 			is_resisting = resistance_amount > 0.1
@@ -535,7 +557,7 @@ func _process_on_leash(delta: float) -> void:
 				# Charlie is being dragged - move toward player but slowly and reluctantly
 				var drag_speed = speed * 0.3 * tension_factor
 				velocity = direction_to_player * drag_speed
-				# Maximum resistance when being dragged
+				# Maximum resistance when being dragged (even more if distracted by wildlife)
 				resistance_amount = 1.0
 				is_resisting = true
 

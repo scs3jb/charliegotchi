@@ -1,6 +1,10 @@
 extends CanvasLayer
 ## DebugMenu - Toggle with F3 to modify Charlie's stats
 
+const Butterfly = preload("res://scripts/wildlife/Butterfly.gd")
+const Bird = preload("res://scripts/wildlife/Bird.gd")
+const Squirrel = preload("res://scripts/wildlife/Squirrel.gd")
+
 var panel: Panel
 var bonding_slider: HSlider
 var entertainment_slider: HSlider
@@ -10,6 +14,7 @@ var entertainment_label: Label
 var hunger_label: Label
 var time_label: Label
 var leash_label: Label
+var wildlife_label: Label
 
 var is_visible: bool = false
 
@@ -36,13 +41,13 @@ func _toggle_menu() -> void:
 func _create_ui() -> void:
 	# Main panel
 	panel = Panel.new()
-	panel.custom_minimum_size = Vector2(160, 200)
+	panel.custom_minimum_size = Vector2(160, 270)
 	panel.position = Vector2(5, 5)
 	add_child(panel)
 
 	var vbox = VBoxContainer.new()
 	vbox.position = Vector2(5, 5)
-	vbox.custom_minimum_size = Vector2(150, 190)
+	vbox.custom_minimum_size = Vector2(150, 260)
 	panel.add_child(vbox)
 
 	# Title
@@ -143,6 +148,39 @@ func _create_ui() -> void:
 	close_btn.pressed.connect(_toggle_menu)
 	btn_hbox.add_child(close_btn)
 
+	# Wildlife spawn section
+	var wildlife_title = Label.new()
+	wildlife_title.text = "Spawn Wildlife:"
+	wildlife_title.add_theme_font_size_override("font_size", 8)
+	vbox.add_child(wildlife_title)
+
+	var wildlife_hbox = HBoxContainer.new()
+	vbox.add_child(wildlife_hbox)
+
+	var butterfly_btn = Button.new()
+	butterfly_btn.text = "Fly"
+	butterfly_btn.add_theme_font_size_override("font_size", 8)
+	butterfly_btn.pressed.connect(_on_spawn_butterfly)
+	wildlife_hbox.add_child(butterfly_btn)
+
+	var bird_btn = Button.new()
+	bird_btn.text = "Bird"
+	bird_btn.add_theme_font_size_override("font_size", 8)
+	bird_btn.pressed.connect(_on_spawn_bird)
+	wildlife_hbox.add_child(bird_btn)
+
+	var squirrel_btn = Button.new()
+	squirrel_btn.text = "Sqrl"
+	squirrel_btn.add_theme_font_size_override("font_size", 8)
+	squirrel_btn.pressed.connect(_on_spawn_squirrel)
+	wildlife_hbox.add_child(squirrel_btn)
+
+	# Wildlife excitement display
+	wildlife_label = Label.new()
+	wildlife_label.text = "Excitement: --"
+	wildlife_label.add_theme_font_size_override("font_size", 8)
+	vbox.add_child(wildlife_label)
+
 func _sync_sliders_to_stats() -> void:
 	bonding_slider.value = GameState.bonding
 	entertainment_slider.value = GameState.entertainment
@@ -162,8 +200,19 @@ func _update_labels() -> void:
 		var tension = distance / charlie.leash_max_distance * 100
 		var resistance = charlie.get_leash_resistance() * 100
 		leash_label.text = "Leash: %d%%T %d%%R" % [int(tension), int(resistance)]
+
+		# Update wildlife excitement
+		if charlie.has_method("get_wildlife_excitement"):
+			var excitement = charlie.get_wildlife_excitement() * 100
+			var target_name = "none"
+			if charlie.attracted_to_wildlife and is_instance_valid(charlie.attracted_to_wildlife):
+				target_name = charlie.attracted_to_wildlife.get_wildlife_name() if charlie.attracted_to_wildlife.has_method("get_wildlife_name") else "?"
+			wildlife_label.text = "Excite: %d%% (%s)" % [int(excitement), target_name]
+		else:
+			wildlife_label.text = "Excitement: --"
 	else:
 		leash_label.text = "Leash: off"
+		wildlife_label.text = "Excitement: --"
 
 func _on_bonding_changed(value: float) -> void:
 	GameState.bonding = value
@@ -199,3 +248,61 @@ func _on_skip_hour() -> void:
 
 func _on_skip_day() -> void:
 	GameState.current_day += 1
+
+func _on_spawn_butterfly() -> void:
+	_spawn_wildlife("butterfly")
+
+func _on_spawn_bird() -> void:
+	_spawn_wildlife("bird")
+
+func _on_spawn_squirrel() -> void:
+	_spawn_wildlife("squirrel")
+
+func _spawn_wildlife(wildlife_type: String) -> void:
+	var player = get_tree().get_first_node_in_group("player")
+	var charlie = get_tree().get_first_node_in_group("charlie")
+
+	if not player:
+		print("Debug: No player found to spawn wildlife near")
+		return
+
+	# Create the wildlife
+	var wildlife: CharacterBody2D = CharacterBody2D.new()
+
+	match wildlife_type:
+		"butterfly":
+			wildlife.set_script(Butterfly)
+		"bird":
+			wildlife.set_script(Bird)
+		"squirrel":
+			wildlife.set_script(Squirrel)
+
+	# Spawn 80 pixels away from player in a random direction
+	var spawn_offset = Vector2(80, 0).rotated(randf() * TAU)
+	wildlife.global_position = player.global_position + spawn_offset
+
+	# Give it a reference to Charlie
+	if charlie:
+		wildlife.set_charlie(charlie)
+
+	# Add to the scene - prefer adding to WildlifeSpawner if it exists
+	var spawner = get_tree().get_first_node_in_group("wildlife_spawner")
+	if not spawner:
+		# Try to find it by name in the current scene
+		var root = get_tree().current_scene
+		if root:
+			spawner = root.get_node_or_null("WildlifeSpawner")
+
+	if spawner:
+		spawner.add_child(wildlife)
+		# Register with spawner's tracking if possible
+		if spawner.has_method("get_active_wildlife_count"):
+			spawner.active_wildlife.append(wildlife)
+	elif get_tree().current_scene:
+		get_tree().current_scene.add_child(wildlife)
+	else:
+		wildlife.queue_free()
+		print("Debug: No valid scene to spawn wildlife in")
+		return
+
+	print("Debug: Spawned %s near player at %s" % [wildlife_type, wildlife.global_position])

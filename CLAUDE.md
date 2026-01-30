@@ -43,7 +43,13 @@ charligotchi/
 │   ├── player/
 │   │   └── Player.gd      # Handles movement, pickup, and animation state
 │   ├── charlie/
-│   │   └── Charlie.gd     # Handles AI states (follow, fetch, keep-away)
+│   │   └── Charlie.gd     # Handles AI states (follow, fetch, keep-away, wildlife attraction)
+│   ├── wildlife/          # Wildlife encounter system
+│   │   ├── Wildlife.gd    # Base class for all wildlife
+│   │   ├── Butterfly.gd   # Flutter movement, wing animation
+│   │   ├── Bird.gd        # Hopping/flying, pecking animation
+│   │   ├── Squirrel.gd    # Fast scurrying, foraging behavior
+│   │   └── WildlifeSpawner.gd  # Manages wildlife spawning
 │   └── ui/
 ├── assets/                # Art, audio, fonts
 │   ├── sprites/
@@ -57,7 +63,7 @@ charligotchi/
 ```
 
 ## Dev Status: Pixel Art Integration
-**(Updated 2026-01-28)**
+**(Updated 2026-01-30)**
 
 High-quality, retro-style pixel art is now generated procedurally using Python (PIL).
 
@@ -119,9 +125,12 @@ If loading scenes fails with "Identifier not found: GameState":
 1.  **Start**: Intro cutscene -> Beach.
 2.  **Beach**: Find Charlie in the box.
 3.  **House**: Feed, pet, play fetch.
-    *   **New**: Pick up Charlie (Interact 'E') and walk him around.
-    *   **New**: Drop Charlie (Interact 'E' while holding).
-4.  **Overworld**: Explore with Charlie following.
+    *   Pick up Charlie (Interact 'E') and walk him around.
+    *   Drop Charlie (Interact 'E' while holding).
+4.  **Overworld**: Explore with Charlie on leash.
+    *   Wildlife (butterflies, birds, squirrels) spawn periodically.
+    *   Charlie spots wildlife and pulls toward them.
+    *   When Charlie gets close, wildlife flees and Charlie gains entertainment.
 
 ## Game Systems
 
@@ -135,11 +144,12 @@ Charlie has three core stats stored in `GameState.gd` (values 0.0 to 1.0):
 | **Bonding** | -2% every 24 game hours | Relationship with player |
 
 Stats affect Charlie's behavior:
-- **High bonding (≥0.5)**: Charlie follows player nicely on leash
-- **Low bonding (<0.5)**: Charlie wanders randomly, resists leash strongly
+- **High bonding (≥0.5)**: Charlie follows player nicely on leash, less distracted by wildlife
+- **Low bonding (<0.5)**: Charlie wanders randomly, resists leash strongly, very distracted by wildlife
 
-Increasing bonding:
+Increasing stats:
 - **Petting**: Press E near Charlie in Overworld to pet (+5% bonding)
+- **Wildlife**: Let Charlie chase wildlife in Overworld (+2-6% entertainment depending on type)
 
 ### Debug Menu (F3)
 Press F3 to toggle the debug overlay. Features:
@@ -171,6 +181,35 @@ Configured in `TimeWeather.gd`:
 - Full day cycle takes ~96 real minutes
 - Ambient lighting changes based on time of day
 
+### Wildlife Encounters
+Wildlife spawns in the Overworld for Charlie to spot and chase (`scripts/wildlife/`).
+
+| Wildlife Type | Speed | Flee Speed | Detection | Entertainment |
+|---------------|-------|------------|-----------|---------------|
+| **Butterfly** | 25 | 80 | 50px | +2% |
+| **Bird** | 35 | 150 | 70px | +4% |
+| **Squirrel** | 55 | 180 | 90px | +6% |
+
+Spawning rules (`WildlifeSpawner.gd`):
+- Max 4 wildlife at once
+- Spawn interval: 8-15 seconds
+- Weighted selection: butterflies (50%), birds (30%), squirrels (20%)
+- Reduced spawns at night (70% skip chance)
+- Reduced spawns in rain (60% skip chance)
+- Reduced spawns in snow (80% skip chance)
+
+Charlie's attraction behavior:
+- `wildlife_attraction_radius = 120px`: Charlie notices wildlife within this range
+- `wildlife_excitement`: 0.0 to 1.0 based on proximity to wildlife
+- Higher bonding = less distraction (trained dogs focus better)
+- Charlie pulls toward wildlife, increasing leash tension
+- Leash turns orange when Charlie is excited about wildlife
+
+When Charlie gets close enough:
+- Wildlife flees (state changes to FLEEING)
+- Charlie gains entertainment based on wildlife type
+- Wildlife fades out and despawns after 1.5 seconds
+
 ## Scene-Specific Rules
 
 ### Intro Cutscene (`Cutscene_Intro.tscn`)
@@ -187,8 +226,11 @@ Configured in `TimeWeather.gd`:
 - Charlie is always on leash
 - `LeashLine` (Line2D) renders between player hand and Charlie collar
 - Player speed reduces based on Charlie's resistance
+- `WildlifeSpawner` node manages wildlife spawning
+- Wildlife (butterflies, birds, squirrels) spawn periodically
+- Charlie gets excited and pulls toward nearby wildlife
+- Leash color changes to orange when Charlie spots wildlife
 
 ### Pending Features
-- Wildlife encounters
 - Sleep system
 - Sniffari mechanics
