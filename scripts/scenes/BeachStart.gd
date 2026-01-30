@@ -16,7 +16,7 @@ var current_state: BeachState = BeachState.EXPLORING
 
 var dialogue_queue: Array = []
 var food_clicks: int = 0
-const FOOD_CLICKS_NEEDED: int = 5
+const FOOD_CLICKS_NEEDED: int = 3
 var is_throwing: bool = false
 
 func _ready() -> void:
