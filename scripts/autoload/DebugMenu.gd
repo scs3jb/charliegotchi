@@ -39,146 +39,153 @@ func _toggle_menu() -> void:
 		_sync_sliders_to_stats()
 
 func _create_ui() -> void:
-	# Main panel
+	# Main panel - compact size
 	panel = Panel.new()
-	panel.custom_minimum_size = Vector2(160, 270)
+	panel.custom_minimum_size = Vector2(130, 195)
 	panel.position = Vector2(5, 5)
 	add_child(panel)
 
 	var vbox = VBoxContainer.new()
-	vbox.position = Vector2(5, 5)
-	vbox.custom_minimum_size = Vector2(150, 260)
+	vbox.position = Vector2(4, 4)
+	vbox.custom_minimum_size = Vector2(122, 187)
+	vbox.add_theme_constant_override("separation", 1)
 	panel.add_child(vbox)
 
-	# Title
+	# Title + Close button row
+	var title_hbox = HBoxContainer.new()
+	vbox.add_child(title_hbox)
 	var title = Label.new()
-	title.text = "Debug (F3)"
-	title.add_theme_font_size_override("font_size", 9)
-	vbox.add_child(title)
+	title.text = "F3 Debug"
+	title.add_theme_font_size_override("font_size", 8)
+	title_hbox.add_child(title)
+	title_hbox.add_spacer(false)
+	var close_btn = Button.new()
+	close_btn.text = "X"
+	close_btn.custom_minimum_size = Vector2(18, 14)
+	close_btn.add_theme_font_size_override("font_size", 7)
+	close_btn.pressed.connect(_toggle_menu)
+	title_hbox.add_child(close_btn)
 
-	# Time display
-	time_label = Label.new()
-	time_label.text = "Day 1 - 8:00 AM"
-	time_label.add_theme_font_size_override("font_size", 8)
-	vbox.add_child(time_label)
-
-	# Time controls
+	# Time row: label + buttons
 	var time_hbox = HBoxContainer.new()
 	vbox.add_child(time_hbox)
-
+	time_label = Label.new()
+	time_label.text = "D1 8:00"
+	time_label.add_theme_font_size_override("font_size", 7)
+	time_hbox.add_child(time_label)
+	time_hbox.add_spacer(false)
 	var skip_hour_btn = Button.new()
 	skip_hour_btn.text = "+1h"
-	skip_hour_btn.add_theme_font_size_override("font_size", 8)
+	skip_hour_btn.custom_minimum_size = Vector2(28, 14)
+	skip_hour_btn.add_theme_font_size_override("font_size", 7)
 	skip_hour_btn.pressed.connect(_on_skip_hour)
 	time_hbox.add_child(skip_hour_btn)
-
 	var skip_day_btn = Button.new()
 	skip_day_btn.text = "+1d"
-	skip_day_btn.add_theme_font_size_override("font_size", 8)
+	skip_day_btn.custom_minimum_size = Vector2(28, 14)
+	skip_day_btn.add_theme_font_size_override("font_size", 7)
 	skip_day_btn.pressed.connect(_on_skip_day)
 	time_hbox.add_child(skip_day_btn)
 
-	# Bonding
+	# Bonding row
+	var bond_hbox = HBoxContainer.new()
+	vbox.add_child(bond_hbox)
 	bonding_label = Label.new()
-	bonding_label.text = "Bonding: 0%"
-	bonding_label.add_theme_font_size_override("font_size", 8)
-	vbox.add_child(bonding_label)
-
+	bonding_label.text = "Bnd 0%"
+	bonding_label.custom_minimum_size = Vector2(40, 0)
+	bonding_label.add_theme_font_size_override("font_size", 7)
+	bond_hbox.add_child(bonding_label)
 	bonding_slider = HSlider.new()
 	bonding_slider.min_value = 0.0
 	bonding_slider.max_value = 1.0
-	bonding_slider.step = 0.01
-	bonding_slider.custom_minimum_size = Vector2(140, 12)
+	bonding_slider.step = 0.05
+	bonding_slider.custom_minimum_size = Vector2(75, 10)
 	bonding_slider.value_changed.connect(_on_bonding_changed)
-	vbox.add_child(bonding_slider)
+	bond_hbox.add_child(bonding_slider)
 
-	# Entertainment
+	# Entertainment row
+	var ent_hbox = HBoxContainer.new()
+	vbox.add_child(ent_hbox)
 	entertainment_label = Label.new()
-	entertainment_label.text = "Entertain: 0%"
-	entertainment_label.add_theme_font_size_override("font_size", 8)
-	vbox.add_child(entertainment_label)
-
+	entertainment_label.text = "Ent 0%"
+	entertainment_label.custom_minimum_size = Vector2(40, 0)
+	entertainment_label.add_theme_font_size_override("font_size", 7)
+	ent_hbox.add_child(entertainment_label)
 	entertainment_slider = HSlider.new()
 	entertainment_slider.min_value = 0.0
 	entertainment_slider.max_value = 1.0
-	entertainment_slider.step = 0.01
-	entertainment_slider.custom_minimum_size = Vector2(140, 12)
+	entertainment_slider.step = 0.05
+	entertainment_slider.custom_minimum_size = Vector2(75, 10)
 	entertainment_slider.value_changed.connect(_on_entertainment_changed)
-	vbox.add_child(entertainment_slider)
+	ent_hbox.add_child(entertainment_slider)
 
-	# Hunger
+	# Hunger row
+	var hunger_hbox = HBoxContainer.new()
+	vbox.add_child(hunger_hbox)
 	hunger_label = Label.new()
-	hunger_label.text = "Hunger: 100%"
-	hunger_label.add_theme_font_size_override("font_size", 8)
-	vbox.add_child(hunger_label)
-
+	hunger_label.text = "Hun 100%"
+	hunger_label.custom_minimum_size = Vector2(40, 0)
+	hunger_label.add_theme_font_size_override("font_size", 7)
+	hunger_hbox.add_child(hunger_label)
 	hunger_slider = HSlider.new()
 	hunger_slider.min_value = 0.0
 	hunger_slider.max_value = 1.0
-	hunger_slider.step = 0.01
-	hunger_slider.custom_minimum_size = Vector2(140, 12)
+	hunger_slider.step = 0.05
+	hunger_slider.custom_minimum_size = Vector2(75, 10)
 	hunger_slider.value_changed.connect(_on_hunger_changed)
-	vbox.add_child(hunger_slider)
+	hunger_hbox.add_child(hunger_slider)
 
-	# Leash debug info
-	leash_label = Label.new()
-	leash_label.text = "Leash: --"
-	leash_label.add_theme_font_size_override("font_size", 8)
-	vbox.add_child(leash_label)
-
-	# Quick set buttons
+	# Fill/Empty buttons
 	var btn_hbox = HBoxContainer.new()
 	vbox.add_child(btn_hbox)
-
 	var fill_btn = Button.new()
-	fill_btn.text = "Fill"
-	fill_btn.add_theme_font_size_override("font_size", 8)
+	fill_btn.text = "Fill All"
+	fill_btn.custom_minimum_size = Vector2(55, 16)
+	fill_btn.add_theme_font_size_override("font_size", 7)
 	fill_btn.pressed.connect(_on_fill_all)
 	btn_hbox.add_child(fill_btn)
-
 	var empty_btn = Button.new()
-	empty_btn.text = "Empty"
-	empty_btn.add_theme_font_size_override("font_size", 8)
+	empty_btn.text = "Empty All"
+	empty_btn.custom_minimum_size = Vector2(55, 16)
+	empty_btn.add_theme_font_size_override("font_size", 7)
 	empty_btn.pressed.connect(_on_empty_all)
 	btn_hbox.add_child(empty_btn)
 
-	var close_btn = Button.new()
-	close_btn.text = "X"
-	close_btn.add_theme_font_size_override("font_size", 8)
-	close_btn.pressed.connect(_toggle_menu)
-	btn_hbox.add_child(close_btn)
-
-	# Wildlife spawn section
-	var wildlife_title = Label.new()
-	wildlife_title.text = "Spawn Wildlife:"
-	wildlife_title.add_theme_font_size_override("font_size", 8)
-	vbox.add_child(wildlife_title)
-
+	# Wildlife spawn buttons
 	var wildlife_hbox = HBoxContainer.new()
 	vbox.add_child(wildlife_hbox)
-
+	var spawn_label = Label.new()
+	spawn_label.text = "Spawn:"
+	spawn_label.add_theme_font_size_override("font_size", 7)
+	wildlife_hbox.add_child(spawn_label)
 	var butterfly_btn = Button.new()
-	butterfly_btn.text = "Fly"
-	butterfly_btn.add_theme_font_size_override("font_size", 8)
+	butterfly_btn.text = "Bfly"
+	butterfly_btn.custom_minimum_size = Vector2(28, 14)
+	butterfly_btn.add_theme_font_size_override("font_size", 7)
 	butterfly_btn.pressed.connect(_on_spawn_butterfly)
 	wildlife_hbox.add_child(butterfly_btn)
-
 	var bird_btn = Button.new()
 	bird_btn.text = "Bird"
-	bird_btn.add_theme_font_size_override("font_size", 8)
+	bird_btn.custom_minimum_size = Vector2(28, 14)
+	bird_btn.add_theme_font_size_override("font_size", 7)
 	bird_btn.pressed.connect(_on_spawn_bird)
 	wildlife_hbox.add_child(bird_btn)
-
 	var squirrel_btn = Button.new()
 	squirrel_btn.text = "Sqrl"
-	squirrel_btn.add_theme_font_size_override("font_size", 8)
+	squirrel_btn.custom_minimum_size = Vector2(28, 14)
+	squirrel_btn.add_theme_font_size_override("font_size", 7)
 	squirrel_btn.pressed.connect(_on_spawn_squirrel)
 	wildlife_hbox.add_child(squirrel_btn)
 
-	# Wildlife excitement display
+	# Leash/Wildlife info (combined)
+	leash_label = Label.new()
+	leash_label.text = "Leash: --"
+	leash_label.add_theme_font_size_override("font_size", 7)
+	vbox.add_child(leash_label)
+
 	wildlife_label = Label.new()
-	wildlife_label.text = "Excitement: --"
-	wildlife_label.add_theme_font_size_override("font_size", 8)
+	wildlife_label.text = "Excite: --"
+	wildlife_label.add_theme_font_size_override("font_size", 7)
 	vbox.add_child(wildlife_label)
 
 func _sync_sliders_to_stats() -> void:
@@ -187,32 +194,37 @@ func _sync_sliders_to_stats() -> void:
 	hunger_slider.value = GameState.hunger
 
 func _update_labels() -> void:
-	bonding_label.text = "Bond: %d%%" % int(GameState.bonding * 100)
-	entertainment_label.text = "Ent: %d%%" % int(GameState.entertainment * 100)
-	hunger_label.text = "Hunger: %d%%" % int(GameState.hunger * 100)
+	bonding_label.text = "Bnd %d%%" % int(GameState.bonding * 100)
+	entertainment_label.text = "Ent %d%%" % int(GameState.entertainment * 100)
+	hunger_label.text = "Hun %d%%" % int(GameState.hunger * 100)
 	time_label.text = "D%d %s" % [GameState.current_day, TimeWeather.get_time_string()]
 
 	# Update leash debug info if Charlie exists in scene
 	var charlie = get_tree().get_first_node_in_group("charlie")
 	var player = get_tree().get_first_node_in_group("player")
-	if charlie and player and charlie.is_on_leash:
-		var distance = charlie.global_position.distance_to(player.global_position)
-		var tension = distance / charlie.leash_max_distance * 100
-		var resistance = charlie.get_leash_resistance() * 100
-		leash_label.text = "Leash: %d%%T %d%%R" % [int(tension), int(resistance)]
+	if charlie and player:
+		if charlie.is_on_leash:
+			var distance = charlie.global_position.distance_to(player.global_position)
+			var tension = distance / charlie.leash_max_distance * 100
+			var resistance = charlie.get_leash_resistance() * 100
+			leash_label.text = "Leash: %dT %dR" % [int(tension), int(resistance)]
+		elif charlie.current_state == charlie.State.HELD:
+			leash_label.text = "State: Held"
+		else:
+			leash_label.text = "Leash: off"
 
 		# Update wildlife excitement
 		if charlie.has_method("get_wildlife_excitement"):
 			var excitement = charlie.get_wildlife_excitement() * 100
-			var target_name = "none"
-			if charlie.attracted_to_wildlife and is_instance_valid(charlie.attracted_to_wildlife):
-				target_name = charlie.attracted_to_wildlife.get_wildlife_name() if charlie.attracted_to_wildlife.has_method("get_wildlife_name") else "?"
-			wildlife_label.text = "Excite: %d%% (%s)" % [int(excitement), target_name]
+			if excitement > 1:
+				wildlife_label.text = "Excite: %d%%" % int(excitement)
+			else:
+				wildlife_label.text = "Excite: --"
 		else:
-			wildlife_label.text = "Excitement: --"
+			wildlife_label.text = "Excite: --"
 	else:
-		leash_label.text = "Leash: off"
-		wildlife_label.text = "Excitement: --"
+		leash_label.text = "Leash: --"
+		wildlife_label.text = "Excite: --"
 
 func _on_bonding_changed(value: float) -> void:
 	GameState.bonding = value

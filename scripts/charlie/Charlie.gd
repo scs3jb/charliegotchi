@@ -121,14 +121,43 @@ func _physics_process(delta: float) -> void:
 		State.ON_LEASH:
 			_process_on_leash(delta)
 		State.HELD:
-			# Do nothing, position controlled by player animation (implied)
-			pass
+			_process_held(delta)
 
 	move_and_slide()
 	_update_animation()
 
 func _process_idle(_delta: float) -> void:
 	velocity = Vector2.ZERO
+
+func _process_held(delta: float) -> void:
+	# Position controlled by player, but check for wildlife with low bonding
+	velocity = Vector2.ZERO
+
+	# Only check for wildlife escape if bonding is low
+	if GameState.bonding >= 0.5:
+		return
+
+	# Check for nearby wildlife
+	if not wildlife_spawner_ref or not wildlife_spawner_ref.has_method("get_nearest_wildlife_to"):
+		return
+
+	# Use player's position since Charlie is being held
+	if not player_ref:
+		return
+
+	var nearest = wildlife_spawner_ref.get_nearest_wildlife_to(player_ref.global_position)
+	if not nearest or not is_instance_valid(nearest):
+		return
+
+	var dist = player_ref.global_position.distance_to(nearest.global_position)
+
+	# Charlie spots wildlife within attraction radius - chance to jump out!
+	if dist < wildlife_attraction_radius:
+		# Lower bonding = higher chance to escape
+		# At 0 bonding: 3% chance per frame, at 0.5 bonding: 0% chance
+		var escape_chance = (0.5 - GameState.bonding) * 0.06  # ~3% at 0 bonding
+		if randf() < escape_chance:
+			_jump_out_and_chase(nearest)
 
 func _process_following(delta: float) -> void:
 	if not player_ref:
@@ -677,10 +706,8 @@ func interact(player: Node2D) -> void:
 	if has_ball:
 		take_ball_from_charlie()
 		GameState.do_fetch_success()
-	elif is_on_leash:
-		# When on leash, petting increases bonding
-		_get_pet()
 	elif player.has_method("pickup") and player.held_object == null:
+		# Pick up Charlie (works whether on leash or not)
 		player.pickup(self)
 
 func _get_pet() -> void:
@@ -696,13 +723,58 @@ func _get_pet() -> void:
 	print("Charlie enjoys the head rub! Bonding: %d%%" % int(GameState.bonding * 100))
 
 func get_picked_up() -> void:
+	# Remember if we were on leash before being picked up
+	var was_on_leash = is_on_leash
+	if is_on_leash:
+		# Temporarily remove leash while held
+		is_on_leash = false
+		is_resisting = false
+		resistance_amount = 0.0
+
 	current_state = State.HELD
 	visible = false
 	$CollisionShape2D.set_deferred("disabled", true)
-	emit_signal("charlie_interacted") # Feedback?
+	emit_signal("charlie_interacted")
+
+	# Store leash state for when dropped
+	set_meta("was_on_leash", was_on_leash)
 
 func get_dropped(drop_pos: Vector2) -> void:
-	current_state = State.IDLE
 	global_position = drop_pos
 	visible = true
 	$CollisionShape2D.set_deferred("disabled", false)
+
+	# Restore leash state if we were on leash before
+	if has_meta("was_on_leash") and get_meta("was_on_leash"):
+		equip_leash()
+		remove_meta("was_on_leash")
+	else:
+		current_state = State.IDLE
+
+func _jump_out_and_chase(wildlife: Node2D) -> void:
+	# Charlie jumps out of player's arms to chase wildlife!
+	if not player_ref:
+		return
+
+	print("Charlie spots %s and jumps out of your arms!" % wildlife.get_wildlife_name() if wildlife.has_method("get_wildlife_name") else "wildlife")
+
+	# Force the player to drop Charlie
+	if player_ref.has_method("drop"):
+		# Set position near player before dropping
+		global_position = player_ref.global_position + Vector2(randf_range(-15, 15), randf_range(-15, 15))
+		visible = true
+		$CollisionShape2D.set_deferred("disabled", false)
+
+		# Clear held_object on player
+		player_ref.held_object = null
+
+	# Set up chase state
+	attracted_to_wildlife = wildlife
+	wildlife_excitement = 1.0  # Maximum excitement!
+
+	# Restore leash if we were on one
+	if has_meta("was_on_leash") and get_meta("was_on_leash"):
+		equip_leash()
+		remove_meta("was_on_leash")
+	else:
+		current_state = State.IDLE

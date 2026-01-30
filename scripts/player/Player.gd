@@ -3,7 +3,13 @@ class_name Player
 ## Player - The main character (blonde girl)
 
 @export var speed: float = 80.0
+@export var carry_speed: float = 55.0  # Speed when carrying Charlie
 @export var leash_drag_speed: float = 15.0  # Speed when dragging resistant Charlie (very slow)
+
+# Carrying entertainment bonus
+var carry_entertainment_timer: float = 0.0
+const CARRY_ENTERTAINMENT_INTERVAL: float = 3.0  # Every 3 seconds
+const CARRY_ENTERTAINMENT_AMOUNT: float = 0.01  # 1% entertainment
 
 # References
 var animated_sprite: AnimatedSprite2D = null
@@ -25,7 +31,7 @@ func _ready() -> void:
 	# Get AnimatedSprite2D if it exists (some scenes use ColorRect placeholders)
 	animated_sprite = get_node_or_null("AnimatedSprite2D")
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if not can_move or is_picking_up:
 		velocity = Vector2.ZERO
 		if not is_picking_up:
@@ -45,9 +51,16 @@ func _physics_process(_delta: float) -> void:
 	if input_dir != Vector2.ZERO:
 		facing_direction = input_dir.normalized()
 
-	# Check if Charlie is resisting on the leash
+	# Determine current speed
 	var current_speed = speed
-	if charlie_ref and charlie_ref.has_method("get_leash_resistance"):
+
+	# Slower when carrying Charlie
+	if held_object:
+		current_speed = carry_speed
+		# Increase entertainment while carrying Charlie
+		_update_carry_entertainment(delta)
+	elif charlie_ref and charlie_ref.has_method("get_leash_resistance"):
+		# Check if Charlie is resisting on the leash
 		var resistance = charlie_ref.get_leash_resistance()
 		if resistance > 0:
 			# Lerp between normal speed and drag speed based on resistance
@@ -59,6 +72,12 @@ func _physics_process(_delta: float) -> void:
 
 	# Update animation
 	_update_animation(input_dir)
+
+func _update_carry_entertainment(delta: float) -> void:
+	carry_entertainment_timer += delta
+	if carry_entertainment_timer >= CARRY_ENTERTAINMENT_INTERVAL:
+		carry_entertainment_timer -= CARRY_ENTERTAINMENT_INTERVAL
+		GameState.add_entertainment(CARRY_ENTERTAINMENT_AMOUNT)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact"):

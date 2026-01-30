@@ -48,6 +48,13 @@ func _update_leash_visual() -> void:
 	if not leash_line:
 		return
 
+	# Hide leash if Charlie is being held
+	if charlie.current_state == charlie.State.HELD:
+		leash_line.visible = false
+		return
+	else:
+		leash_line.visible = true
+
 	# Draw line from player's hand to Charlie's collar
 	leash_line.clear_points()
 
@@ -97,10 +104,10 @@ func _update_interaction_prompt() -> void:
 		nearby_interactable = house
 		return
 
-	# Check distance to Charlie (petting)
+	# Check distance to Charlie (pickup)
 	var charlie_dist = player_pos.distance_to(charlie.global_position)
-	if charlie_dist < 40:
-		interaction_prompt.text = "[E] Pet Charlie"
+	if charlie_dist < 40 and charlie.current_state != charlie.State.HELD:
+		interaction_prompt.text = "[E] Pick up Charlie"
 		interaction_prompt.visible = true
 		nearby_interactable = charlie
 		return
