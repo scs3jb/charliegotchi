@@ -33,11 +33,17 @@ func _process(_delta: float) -> void:
 	_update_interaction_prompt()
 
 func _update_interaction_prompt() -> void:
+	var player_pos = player.global_position
+
+	# Show continue prompt while holding Charlie
+	if current_state == BeachState.PICKUP_CHARLIE and dialogue_panel.visible:
+		interaction_prompt.text = "[E] Continue"
+		interaction_prompt.visible = true
+		return
+
 	if current_state != BeachState.EXPLORING and current_state != BeachState.CHARLIE_OUT:
 		interaction_prompt.visible = false
 		return
-
-	var player_pos = player.global_position
 
 	# Check distance to box
 	if current_state == BeachState.EXPLORING:
@@ -90,7 +96,11 @@ func _show_next_dialogue() -> void:
 	if dialogue_queue.size() > 0:
 		dialogue_label.text = dialogue_queue.pop_front()
 		dialogue_panel.visible = true
-		player.set_can_move(false)
+		# Allow movement while holding Charlie and reading dialogue
+		if current_state == BeachState.PICKUP_CHARLIE:
+			player.set_can_move(true)
+		else:
+			player.set_can_move(false)
 	else:
 		dialogue_panel.visible = false
 		player.set_can_move(true)
