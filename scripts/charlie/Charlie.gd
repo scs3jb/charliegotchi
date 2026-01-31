@@ -10,7 +10,7 @@ class_name Charlie
 var animated_sprite: AnimatedSprite2D = null
 
 # State
-enum State { IDLE, FOLLOWING, WANDERING, FETCHING, KEEP_AWAY, ON_LEASH, HELD, PEEING }
+enum State { IDLE, FOLLOWING, WANDERING, FETCHING, KEEP_AWAY, ON_LEASH, HELD, PEEING, SNIFFARI }
 var current_state: State = State.IDLE
 
 # Tree interest
@@ -18,6 +18,13 @@ var target_tree: Node2D = null
 var pee_timer: float = 0.0
 var bored_timer: float = 0.0
 var pee_particles: CPUParticles2D = null
+
+# Sniffari behavior
+var sniffari_timer: float = 0.0
+var sniffari_reward_timer: float = 0.0
+var sniffari_interest_timer: float = 0.0
+var sniffari_target_node: Node2D = null
+var is_in_sniffari: bool = false # Internal flag to track Sniffari session
 
 var is_on_leash: bool = false
 var target_position: Vector2 = Vector2.ZERO
@@ -71,6 +78,7 @@ var furniture_rects: Array = [
 signal reached_player
 signal picked_up_ball
 signal charlie_interacted
+signal sniffari_finished
 
 func _ready() -> void:
 	add_to_group("charlie")
@@ -82,13 +90,13 @@ func _setup_pee_particles() -> void:
 	pee_particles = CPUParticles2D.new()
 	pee_particles.name = "PeeParticles"
 	pee_particles.emitting = false
-	pee_particles.amount = 5 # Further reduced
+	pee_particles.amount = 5
 	pee_particles.lifetime = 0.4
 	pee_particles.one_shot = false
 	pee_particles.explosiveness = 0.0
 	pee_particles.randomness = 0.2
 	pee_particles.direction = Vector2(1, 0.2)
-	pee_particles.spread = 8.0 # Tighter
+	pee_particles.spread = 8.0
 	pee_particles.gravity = Vector2(0, 160)
 	pee_particles.initial_velocity_min = 25.0
 	pee_particles.initial_velocity_max = 40.0
@@ -96,7 +104,7 @@ func _setup_pee_particles() -> void:
 	pee_particles.scale_amount_max = 1.2
 	pee_particles.color = Color(1.0, 1.0, 0.0, 0.7)
 	add_child(pee_particles)
-	pee_particles.position = Vector2(0, -2) # Centered on body, slightly up from feet
+	pee_particles.position = Vector2(0, -2)
 
 func _setup_animated_sprite() -> void:
 	animated_sprite = get_node_or_null("AnimatedSprite2D")
@@ -117,6 +125,10 @@ func _setup_animated_sprite() -> void:
 		animated_sprite.play("idle_down")
 
 func _physics_process(delta: float) -> void:
+	# Always process Sniffari timers if active, even if in PEEING sub-state
+	if is_in_sniffari:
+		_update_sniffari_timers(delta)
+
 	match current_state:
 		State.IDLE: _process_idle(delta)
 		State.FOLLOWING: _process_following(delta)
@@ -126,6 +138,7 @@ func _physics_process(delta: float) -> void:
 		State.ON_LEASH: _process_on_leash(delta)
 		State.HELD: _process_held(delta)
 		State.PEEING: _process_peeing(delta)
+		State.SNIFFARI: _process_sniffari(delta)
 
 	move_and_slide()
 	_update_animation()
@@ -153,11 +166,9 @@ func _find_interesting_tree() -> void:
 	if is_on_leash: min_dist = leash_max_distance * 1.2
 	
 	for tree in trees:
-		# Refractory period: Don't pee on the same tree again for 4 hours
 		if tree.get("last_peed_time") != null:
 			if current_total_hours - tree.last_peed_time < 4.0:
 				continue
-				
 		var dist = global_position.distance_to(tree.global_position)
 		if dist < min_dist:
 			min_dist = dist
@@ -186,15 +197,6 @@ func _start_peeing() -> void:
 	var dir_to_tree = Vector2.LEFT
 	if target_tree and is_instance_valid(target_tree):
 		dir_to_tree = (target_tree.global_position - global_position).normalized()
-	else:
-		# Fallback to nearest if target_tree lost
-		var trees = get_tree().get_nodes_in_group("trees")
-		var min_dist = 50.0
-		for tree in trees:
-			var d = global_position.distance_to(tree.global_position)
-			if d < min_dist:
-				min_dist = d
-				dir_to_tree = (tree.global_position - global_position).normalized()
 	
 	if abs(dir_to_tree.x) > abs(dir_to_tree.y):
 		facing_direction = "right" if dir_to_tree.x > 0 else "left"
@@ -204,11 +206,26 @@ func _start_peeing() -> void:
 	if animated_sprite: animated_sprite.play("idle_" + facing_direction)
 	
 	if pee_particles: 
-		# Aim slightly up so it arcs naturally with gravity
-		pee_particles.direction = dir_to_tree + Vector2(0, -0.2)
-		# Position: ~10px up from feet (body height) and offset slightly toward tree
-		pee_particles.position = Vector2(0, -10) + (dir_to_tree * 4.0)
+		pee_particles.direction = dir_to_tree + Vector2(0, -0.1)
+		# Origin: ~10px up from feet (body center) 
+		# and offset BACKWARDS from the tree direction to come from his rear
+		pee_particles.position = Vector2(0, -10) - (dir_to_tree * 4.0)
 		pee_particles.emitting = true
+
+func _cancel_peeing() -> void:
+	if current_state != State.PEEING: return
+	if pee_particles: pee_particles.emitting = false
+	
+	var puddle_script = load("res://scripts/props/Puddle.gd")
+	if puddle_script:
+		var puddle = Node2D.new()
+		puddle.set_script(puddle_script)
+		get_parent().add_child(puddle)
+		puddle.global_position = global_position + Vector2(0, 2)
+		puddle.scale = Vector2(0.6, 0.6)
+	
+	target_tree = null
+	target_position = Vector2.ZERO
 
 func _finish_peeing() -> void:
 	if pee_particles: pee_particles.emitting = false
@@ -222,13 +239,17 @@ func _finish_peeing() -> void:
 	if target_tree and is_instance_valid(target_tree):
 		if target_tree.has_method("mark_as_peed_on"):
 			target_tree.mark_as_peed_on()
-		# Record the time Charlie peed on this specific tree
 		target_tree.set("last_peed_time", GameState.current_day * 24.0 + GameState.current_hour)
 	
 	target_tree = null
 	target_position = Vector2.ZERO
-	current_state = State.ON_LEASH if is_on_leash else State.IDLE
-	bored_timer = 0.0
+	
+	# Transition back correctly: check if we are in Sniffari
+	if is_in_sniffari:
+		current_state = State.SNIFFARI
+	else:
+		current_state = State.ON_LEASH if is_on_leash else State.IDLE
+		if current_state == State.IDLE: bored_timer = 0.0
 
 func _process_on_leash(delta: float) -> void:
 	if not player_ref: return
@@ -302,6 +323,77 @@ func _process_on_leash(delta: float) -> void:
 				velocity = direction_to_player * speed * 0.3 * tension_factor
 				resistance_amount = 1.0
 				is_resisting = true
+
+func start_sniffari() -> void:
+	if current_state == State.PEEING: _cancel_peeing()
+	current_state = State.SNIFFARI
+	is_in_sniffari = true
+	sniffari_timer = 50.0
+	sniffari_reward_timer = 10.0
+	sniffari_interest_timer = 0.0
+	sniffari_target_node = null
+	target_position = Vector2.ZERO
+	print("Sniffari started!")
+
+func _update_sniffari_timers(delta: float) -> void:
+	sniffari_timer -= delta
+	sniffari_reward_timer -= delta
+	
+	if sniffari_reward_timer <= 0:
+		GameState.add_bonding(0.2)
+		sniffari_reward_timer = 10.0
+		print("Sniffari bonding reward +20%")
+		
+	if sniffari_timer <= 0:
+		_finish_sniffari()
+
+func _process_sniffari(delta: float) -> void:
+	# Timers now updated in _physics_process via _update_sniffari_timers
+	if not is_in_sniffari: return
+		
+	sniffari_interest_timer -= delta
+	if sniffari_interest_timer <= 0:
+		_pick_sniffari_interest()
+		
+	if target_position != Vector2.ZERO:
+		var dist = global_position.distance_to(target_position)
+		if dist > 15.0:
+			velocity = (target_position - global_position).normalized() * speed * 0.8
+		else:
+			velocity = Vector2.ZERO
+			if sniffari_target_node and is_instance_valid(sniffari_target_node):
+				if sniffari_target_node.is_in_group("trees") and randf() < 0.4:
+					target_tree = sniffari_target_node
+					_start_peeing()
+					return
+			if animated_sprite: animated_sprite.play("idle_down")
+	else:
+		velocity = Vector2.ZERO
+
+func _pick_sniffari_interest() -> void:
+	var roll = randf()
+	if roll < 0.5: # Go to tree
+		var trees = get_tree().get_nodes_in_group("trees")
+		if trees.size() > 0:
+			sniffari_target_node = trees[randi() % trees.size()]
+			target_position = sniffari_target_node.get_pee_position() if sniffari_target_node.has_method("get_pee_position") else sniffari_target_node.global_position
+	elif roll < 0.8: # Chase wildlife
+		if wildlife_spawner_ref:
+			sniffari_target_node = wildlife_spawner_ref.get_nearest_wildlife_to(global_position)
+			if sniffari_target_node:
+				target_position = sniffari_target_node.global_position
+	else: # Just sniff grass nearby
+		target_position = global_position + Vector2(randf_range(-80, 80), randf_range(-80, 80))
+		sniffari_target_node = null
+		
+	sniffari_interest_timer = randf_range(4.0, 10.0)
+
+func _finish_sniffari() -> void:
+	is_in_sniffari = false
+	if current_state == State.SNIFFARI:
+		current_state = State.ON_LEASH if is_on_leash else State.IDLE
+	emit_signal("sniffari_finished")
+	print("Sniffari finished!")
 
 func _process_held(delta: float) -> void:
 	velocity = Vector2.ZERO
@@ -383,7 +475,6 @@ func _process_wandering(delta: float) -> void:
 			velocity = (target_position - global_position).normalized() * speed * 0.7
 			_update_animation()
 			return
-
 	wander_timer -= delta
 	if wander_timer <= 0:
 		wander_direction = Vector2.ZERO if randf() < 0.3 else Vector2(randf_range(-1, 1), randf_range(-1, 1)).normalized()
@@ -528,15 +619,15 @@ func set_player(player: Node2D) -> void: player_ref = player
 func start_following() -> void: current_state = State.FOLLOWING
 func start_wandering() -> void: current_state = State.WANDERING; wander_timer = 0.0
 func stop_moving() -> void: current_state = State.IDLE; velocity = Vector2.ZERO
-func fetch_ball(ball: Node2D) -> void: ball_ref = ball; has_ball = false; returning_ball = false; current_state = State.FETCHING
+func fetch_ball(ball: Node2D) -> void: 
+	if current_state == State.PEEING: _cancel_peeing()
+	ball_ref = ball; has_ball = false; returning_ball = false; current_state = State.FETCHING
 func equip_leash() -> void: is_on_leash = true; current_state = State.ON_LEASH
 func remove_leash() -> void: is_on_leash = false; is_resisting = false; resistance_amount = 0.0; current_state = State.FOLLOWING
 func is_leash_resisting() -> bool: return is_on_leash and is_resisting
 func get_leash_resistance() -> float: return resistance_amount if is_on_leash else 0.0
 func take_ball_from_charlie() -> bool: 
-	if has_ball: 
-		has_ball = false
-		return true
+	if has_ball: has_ball = false; return true
 	return false
 func interact(player: Node2D) -> void:
 	emit_signal("charlie_interacted")
@@ -548,6 +639,7 @@ func _get_pet() -> void:
 	GameState.emit_signal("stats_changed")
 	velocity = Vector2.ZERO
 func get_picked_up() -> void:
+	if current_state == State.PEEING: _cancel_peeing()
 	var was_on_leash = is_on_leash
 	if is_on_leash: is_on_leash = false; is_resisting = false; resistance_amount = 0.0
 	current_state = State.HELD; visible = false; $CollisionShape2D.set_deferred("disabled", true)
@@ -557,6 +649,7 @@ func get_dropped(drop_pos: Vector2) -> void:
 	if has_meta("was_on_leash") and get_meta("was_on_leash"): equip_leash()
 	else: current_state = State.IDLE
 func _jump_out_and_chase(wildlife: Node2D) -> void:
+	if current_state == State.PEEING: _cancel_peeing()
 	if not player_ref: return
 	if player_ref.has_method("drop"):
 		global_position = player_ref.global_position + Vector2(randf_range(-15, 15), randf_range(-15, 15))

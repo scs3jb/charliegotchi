@@ -45,6 +45,12 @@ var feed_count: int = 0
 var pet_count: int = 0
 var fetch_success_count: int = 0
 
+# Sniffari tracking
+var last_sniffari_time: float = -999.0 # Total game hours
+var last_sniffari_day: int = -1
+var full_bonding_reached_today: bool = false
+const SNIFFARI_COOLDOWN: float = 3.0 # hours
+
 # Day/Time (managed by TimeWeather but saved here)
 var current_day: int = 1
 var current_hour: float = 8.0  # 8 AM start
@@ -75,39 +81,27 @@ func add_hunger(amount: float) -> void:
 	emit_signal("stats_changed")
 
 func process_stat_decay(game_hour: float, game_day: int) -> void:
-	# Calculate hours passed since last hunger decay
 	var hours_since_hunger_decay = game_hour - last_hunger_decay_hour
-	if hours_since_hunger_decay < 0:
-		hours_since_hunger_decay += 24.0  # Wrapped to next day
-
-	# Hunger decay every 8 hours
+	if hours_since_hunger_decay < 0: hours_since_hunger_decay += 24.0
 	while hours_since_hunger_decay >= HUNGER_DECAY_INTERVAL:
 		hunger = clampf(hunger - HUNGER_DECAY_AMOUNT, 0.0, 1.0)
 		last_hunger_decay_hour += HUNGER_DECAY_INTERVAL
-		if last_hunger_decay_hour >= 24.0:
-			last_hunger_decay_hour -= 24.0
+		if last_hunger_decay_hour >= 24.0: last_hunger_decay_hour -= 24.0
 		hours_since_hunger_decay -= HUNGER_DECAY_INTERVAL
 
-	# Calculate hours passed since last entertainment decay
 	var hours_since_ent_decay = game_hour - last_entertainment_decay_hour
-	if hours_since_ent_decay < 0:
-		hours_since_ent_decay += 24.0
-
-	# Entertainment decay every 8 hours
+	if hours_since_ent_decay < 0: hours_since_ent_decay += 24.0
 	while hours_since_ent_decay >= ENTERTAINMENT_DECAY_INTERVAL:
 		entertainment = clampf(entertainment - ENTERTAINMENT_DECAY_AMOUNT, 0.0, 1.0)
 		last_entertainment_decay_hour += ENTERTAINMENT_DECAY_INTERVAL
-		if last_entertainment_decay_hour >= 24.0:
-			last_entertainment_decay_hour -= 24.0
+		if last_entertainment_decay_hour >= 24.0: last_entertainment_decay_hour -= 24.0
 		hours_since_ent_decay -= ENTERTAINMENT_DECAY_INTERVAL
 
-	# Bonding decay every 24 hours (each new day)
 	var days_since_bonding_decay = game_day - last_bonding_decay_day
 	while days_since_bonding_decay >= BONDING_DECAY_INTERVAL:
 		bonding = clampf(bonding - BONDING_DECAY_AMOUNT, 0.0, 1.0)
 		last_bonding_decay_day += BONDING_DECAY_INTERVAL
 		days_since_bonding_decay -= BONDING_DECAY_INTERVAL
-
 	emit_signal("stats_changed")
 
 func _check_trust_unlock() -> void:
@@ -116,38 +110,45 @@ func _check_trust_unlock() -> void:
 		emit_signal("charlie_trust_unlocked")
 		print("Charlie now trusts you enough to explore outside!")
 
-# Interaction functions (each gives 25% = 0.25)
 func do_feed() -> void:
 	feed_count += 1
 	add_bonding(0.25)
 	add_entertainment(0.125)
-	add_hunger(0.25)  # Feeding restores 25% hunger
-	print("Fed Charlie! Bonding: ", bonding, " Entertainment: ", entertainment, " Hunger: ", hunger)
+	add_hunger(0.25)
 
 func do_pet() -> void:
 	pet_count += 1
 	add_bonding(0.25)
 	add_entertainment(0.125)
-	print("Petted Charlie! Bonding: ", bonding, " Entertainment: ", entertainment)
 
 func do_fetch_success() -> void:
 	fetch_success_count += 1
 	fetch_attempts += 1
 	add_entertainment(0.25)
 	add_bonding(0.125)
-
-	# Charlie learns to return ball after 3 successful fetches
 	if fetch_success_count >= 3 and not charlie_returns_ball:
 		charlie_returns_ball = true
-		print("Charlie learned to return the ball!")
-
-	print("Fetch success! Entertainment: ", entertainment)
+	emit_signal("stats_changed")
 
 func set_phase(phase: int) -> void:
 	current_phase = phase
 	emit_signal("phase_changed", phase)
 
-# Save/Load functions
+func is_sniffari_available() -> bool:
+	# If we reached full bonding after a sniffari today, no more until tomorrow
+	if full_bonding_reached_today and current_day <= last_sniffari_day:
+		return false
+		
+	var current_total_hours = current_day * 24.0 + current_hour
+	return current_total_hours - last_sniffari_time >= SNIFFARI_COOLDOWN
+
+func record_sniffari() -> void:
+	last_sniffari_time = current_day * 24.0 + current_hour
+	last_sniffari_day = current_day
+	# Check if we have full bonding now
+	if bonding >= 1.0:
+		full_bonding_reached_today = true
+
 func save_game() -> void:
 	var save_data = {
 		"player_name": player_name,
@@ -172,27 +173,22 @@ func save_game() -> void:
 		"pet_count": pet_count,
 		"fetch_success_count": fetch_success_count,
 		"current_day": current_day,
-		"current_hour": current_hour
+		"current_hour": current_hour,
+		"last_sniffari_time": last_sniffari_time,
+		"last_sniffari_day": last_sniffari_day,
+		"full_bonding_reached_today": full_bonding_reached_today
 	}
-
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
 		file.store_var(save_data)
 		file.close()
-		print("Game saved!")
-	else:
-		print("Error saving game!")
 
 func load_game() -> bool:
-	if not FileAccess.file_exists(SAVE_PATH):
-		print("No save file found")
-		return false
-
+	if not FileAccess.file_exists(SAVE_PATH): return false
 	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
 	if file:
 		var save_data = file.get_var()
 		file.close()
-
 		player_name = save_data.get("player_name", "Player")
 		island_name = save_data.get("island_name", "Paradise Island")
 		player_appearance = save_data.get("player_appearance", player_appearance)
@@ -214,18 +210,13 @@ func load_game() -> bool:
 		feed_count = save_data.get("feed_count", 0)
 		pet_count = save_data.get("pet_count", 0)
 		fetch_success_count = save_data.get("fetch_success_count", 0)
-
-		if first_overworld_complete:
-			current_day = save_data.get("current_day", 1)
-			current_hour = save_data.get("current_hour", 8.0)
-		else:
-			current_day = 1
-			current_hour = 8.0
-
+		current_day = save_data.get("current_day", 1)
+		current_hour = save_data.get("current_hour", 8.0)
+		last_sniffari_time = save_data.get("last_sniffari_time", -999.0)
+		last_sniffari_day = save_data.get("last_sniffari_day", -1)
+		full_bonding_reached_today = save_data.get("full_bonding_reached_today", false)
 		emit_signal("stats_changed")
-		print("Game loaded!")
 		return true
-
 	return false
 
 func reset_game() -> void:
@@ -252,4 +243,7 @@ func reset_game() -> void:
 	fetch_success_count = 0
 	current_day = 1
 	current_hour = 8.0
+	last_sniffari_time = -999.0
+	last_sniffari_day = -1
+	full_bonding_reached_today = false
 	emit_signal("stats_changed")
