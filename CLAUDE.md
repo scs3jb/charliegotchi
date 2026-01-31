@@ -212,6 +212,13 @@ When Charlie gets close enough:
 
 ## Scene-Specific Rules
 
+### Environment & Layering (Y-Sorting)
+See [ENVIRONMENT_GUIDE.md](ENVIRONMENT_GUIDE.md) for full details.
+-   **Origins**: Must be at the "feet" or "base" of the object for correct Y-sorting.
+-   **Trees**: Use a split-sprite system (Trunk at `z_index 0`, Canopy at `z_index 1`).
+-   **Background**: Tiles/Large areas must be at `z_index -1`.
+-   **Leash**: Align points to the new feet-based origins (Hand: `Vector2(8, -14)`, Collar: `Vector2(0, -20)`).
+
 ### Intro Cutscene (`Cutscene_Intro.tscn`)
 - Shake effects only apply to `SceneContent` node
 - `NarrationPanel` and `SkipButton` remain stationary for readability
