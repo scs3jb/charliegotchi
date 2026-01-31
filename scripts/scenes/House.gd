@@ -2,7 +2,7 @@ extends Node2D
 ## House - Phase 1 main scene: Feed, pet, and play fetch with Charlie
 
 @onready var player: CharacterBody2D = $Player
-@onready var charlie: CharacterBody2D = $Charlie
+@onready var charlie: Charlie = $Charlie
 @onready var food_bowl: Area2D = $FoodBowl
 @onready var pet_bed: Area2D = $PetBed
 @onready var charlie_basket: Area2D = $CharlieBasket

@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/characters/charlie_spritesheet.png" id="6_charlie_sprite"]
 [ext_resource type="SpriteFrames" path="res://assets/sprites/characters/charlie_sprite_frames.tres" id="7_charlie_frames"]
 [ext_resource type="SpriteFrames" path="res://resources/sprites/player_frames.tres" id="8_player_frames"]
+[ext_resource type="PackedScene" path="res://scenes/props/Tree.tscn" id="10_tree"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
 size = Vector2(16, 12)
@@ -194,9 +195,11 @@ animations = [{
 }]
 
 [node name="Overworld" type="Node2D"]
+y_sort_enabled = true
 script = ExtResource("1_overworld")
 
 [node name="TileBackground" type="Node2D" parent="."]
+z_index = -1
 
 [node name="Grass" type="ColorRect" parent="TileBackground"]
 offset_right = 852.0
@@ -215,7 +218,23 @@ offset_right = 852.0
 offset_bottom = 254.0
 color = Color(0.5, 0.4, 0.3, 1)
 
+[node name="Tree1" parent="." instance=ExtResource("10_tree")]
+position = Vector2(100, 150)
+
+[node name="Tree2" parent="." instance=ExtResource("10_tree")]
+position = Vector2(300, 300)
+
+[node name="Tree3" parent="." instance=ExtResource("10_tree")]
+position = Vector2(600, 180)
+
+[node name="Tree4" parent="." instance=ExtResource("10_tree")]
+position = Vector2(750, 350)
+
+[node name="Tree5" parent="." instance=ExtResource("10_tree")]
+position = Vector2(150, 400)
+
 [node name="House" type="Area2D" parent="." groups=["interactable"]]
+y_sort_enabled = true
 position = Vector2(213, 80)
 collision_layer = 32
 
@@ -251,51 +270,8 @@ horizontal_alignment = 1
 [node name="CollisionShape2D" type="CollisionShape2D" parent="House"]
 shape = SubResource("RectangleShape2D_house")
 
-[node name="Trees" type="Node2D" parent="."]
-
-[node name="Tree1" type="ColorRect" parent="Trees"]
-offset_left = 60.0
-offset_top = 280.0
-offset_right = 90.0
-offset_bottom = 340.0
-color = Color(0.2, 0.4, 0.2, 1)
-
-[node name="Tree2" type="ColorRect" parent="Trees"]
-offset_left = 350.0
-offset_top = 100.0
-offset_right = 380.0
-offset_bottom = 160.0
-color = Color(0.2, 0.4, 0.2, 1)
-
-[node name="Tree3" type="ColorRect" parent="Trees"]
-offset_left = 500.0
-offset_top = 300.0
-offset_right = 530.0
-offset_bottom = 360.0
-color = Color(0.2, 0.4, 0.2, 1)
-
-[node name="Tree4" type="ColorRect" parent="Trees"]
-offset_left = 120.0
-offset_top = 380.0
-offset_right = 150.0
-offset_bottom = 440.0
-color = Color(0.2, 0.4, 0.2, 1)
-
-[node name="Tree5" type="ColorRect" parent="Trees"]
-offset_left = 700.0
-offset_top = 80.0
-offset_right = 730.0
-offset_bottom = 140.0
-color = Color(0.2, 0.4, 0.2, 1)
-
-[node name="Tree6" type="ColorRect" parent="Trees"]
-offset_left = 750.0
-offset_top = 380.0
-offset_right = 780.0
-offset_bottom = 440.0
-color = Color(0.2, 0.4, 0.2, 1)
-
 [node name="Player" type="CharacterBody2D" parent="."]
+y_sort_enabled = true
 position = Vector2(213, 160)
 collision_layer = 2
 collision_mask = 1
@@ -303,15 +279,17 @@ script = ExtResource("2_player")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Player"]
 texture_filter = 1
+position = Vector2(0, -16)
 sprite_frames = ExtResource("8_player_frames")
 animation = &"idle_down"
 autoplay = "idle_down"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
-position = Vector2(0, 6)
+position = Vector2(0, -6)
 shape = SubResource("RectangleShape2D_player")
 
 [node name="InteractionArea" type="Area2D" parent="Player"]
+position = Vector2(0, -6)
 collision_layer = 0
 collision_mask = 32
 
@@ -325,6 +303,7 @@ limit_right = 852
 limit_bottom = 480
 
 [node name="Charlie" type="CharacterBody2D" parent="."]
+y_sort_enabled = true
 position = Vector2(240, 175)
 collision_layer = 4
 collision_mask = 1
@@ -332,12 +311,13 @@ script = ExtResource("3_charlie")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Charlie"]
 texture_filter = 1
+position = Vector2(0, -16)
 sprite_frames = ExtResource("7_charlie_frames")
 animation = &"idle_down"
 autoplay = "idle_down"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Charlie"]
-position = Vector2(0, 4)
+position = Vector2(0, -6)
 shape = SubResource("RectangleShape2D_charlie")
 
 [node name="LeashLine" type="Line2D" parent="."]
@@ -345,6 +325,7 @@ width = 2.0
 default_color = Color(0.4, 0.3, 0.2, 1)
 
 [node name="WildlifeSpawner" type="Node2D" parent="."]
+y_sort_enabled = true
 script = ExtResource("9_wildlife_spawner")
 
 [node name="AmbientLight" type="CanvasModulate" parent="."]

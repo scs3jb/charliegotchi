@@ -58,7 +58,7 @@ func _try_spawn_wildlife() -> void:
 	var wildlife_type = _pick_weighted_type()
 
 	# Pick spawn position away from player
-	var spawn_pos = _get_spawn_position()
+	var spawn_pos = _get_spawn_position(wildlife_type)
 	if spawn_pos == Vector2.ZERO:
 		return
 
@@ -121,7 +121,22 @@ func _pick_weighted_type() -> String:
 
 	return "butterfly"  # Fallback
 
-func _get_spawn_position() -> Vector2:
+func _get_spawn_position(type: String = "") -> Vector2:
+	# If it's a squirrel, try to spawn near a tree
+	if type == "squirrel":
+		var trees = get_tree().get_nodes_in_group("trees")
+		if trees.size() > 0:
+			var tree = trees[randi() % trees.size()]
+			# Spawn in a small radius around the tree
+			var angle = randf() * PI * 2
+			var dist = randf_range(20, 50)
+			var pos = tree.global_position + Vector2(cos(angle), sin(angle)) * dist
+			
+			# Ensure it's within bounds
+			pos.x = clampf(pos.x, spawn_min.x, spawn_max.x)
+			pos.y = clampf(pos.y, spawn_min.y, spawn_max.y)
+			return pos
+
 	# Try to find a valid spawn position away from player
 	for _attempt in range(10):
 		var pos = Vector2(

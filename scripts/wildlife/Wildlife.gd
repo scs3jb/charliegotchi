@@ -8,7 +8,7 @@ class_name Wildlife
 @export var entertainment_value: float = 0.02  # Entertainment boost when Charlie interacts
 
 # State machine
-enum State { IDLE, MOVING, FLEEING, DESPAWNING }
+enum State { IDLE, MOVING, FLEEING, DESPAWNING, CLIMBING }
 var current_state: State = State.IDLE
 
 # Movement

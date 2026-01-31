@@ -2,7 +2,7 @@ extends Node2D
 ## Overworld - Phase 2: Outdoor exploration with Charlie on leash
 
 @onready var player: CharacterBody2D = $Player
-@onready var charlie: CharacterBody2D = $Charlie
+@onready var charlie: Charlie = $Charlie
 @onready var house: Area2D = $House
 @onready var leash_line: Line2D = $LeashLine
 @onready var ambient_light: CanvasModulate = $AmbientLight
@@ -68,7 +68,8 @@ func _update_leash_visual() -> void:
 	var player_leash_point = player.global_position + hand_offset
 
 	# Charlie's collar position (neck area, below head)
-	var charlie_leash_point = charlie.global_position + Vector2(0, -2)
+	# Account for -16px sprite offset + collar position relative to sprite
+	var charlie_leash_point = charlie.global_position + Vector2(0, -20)
 
 	leash_line.add_point(player_leash_point)
 	leash_line.add_point(charlie_leash_point)

@@ -10,8 +10,14 @@ class_name Charlie
 var animated_sprite: AnimatedSprite2D = null
 
 # State
-enum State { IDLE, FOLLOWING, WANDERING, FETCHING, KEEP_AWAY, ON_LEASH, HELD }
+enum State { IDLE, FOLLOWING, WANDERING, FETCHING, KEEP_AWAY, ON_LEASH, HELD, PEEING }
 var current_state: State = State.IDLE
+
+# Tree interest
+var target_tree: Node2D = null
+var pee_timer: float = 0.0
+var bored_timer: float = 0.0
+
 var is_on_leash: bool = false
 var target_position: Vector2 = Vector2.ZERO
 var player_ref: Node2D = null
@@ -65,10 +71,6 @@ signal reached_player
 signal picked_up_ball
 signal charlie_interacted
 
-# Spritesheet configuration
-# Spritesheet configuration
-# const FRAME_SIZE: int = 32 # Deprecated, using SpriteFrames resource
-
 func _ready() -> void:
 	add_to_group("charlie")
 	add_to_group("interactable")
@@ -92,13 +94,8 @@ func _setup_animated_sprite() -> void:
 			if child is ColorRect:
 				child.queue_free()
 	else:
-		# Ensure pixel art filtering and correct scale for existing sprite
 		# Ensure pixel art filtering
 		animated_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		# Scale is now handled in the scene (should be 1.0 for 32px assets)
-
-	# Note: SpriteFrames are now appointed in the editor via charlie_sprite_frames.tres
-	# We rely on the scene configuration rather than building it at runtime.
 	
 	if animated_sprite.sprite_frames == null:
 		push_warning("Charlie: AnimatedSprite2D has no SpriteFrames assigned!")
@@ -122,12 +119,60 @@ func _physics_process(delta: float) -> void:
 			_process_on_leash(delta)
 		State.HELD:
 			_process_held(delta)
+		State.PEEING:
+			_process_peeing(delta)
 
 	move_and_slide()
 	_update_animation()
 
-func _process_idle(_delta: float) -> void:
+func _process_idle(delta: float) -> void:
 	velocity = Vector2.ZERO
+	_check_for_boredom(delta)
+
+func _check_for_boredom(delta: float) -> void:
+	if is_on_leash: return
+	
+	bored_timer += delta
+	if bored_timer > 5.0:
+		_find_interesting_tree()
+
+func _find_interesting_tree() -> void:
+	var trees = get_tree().get_nodes_in_group("trees")
+	if trees.size() == 0: return
+	
+	var nearest_tree = null
+	var min_dist = 150.0 # Only care about trees within 150px
+	
+	for tree in trees:
+		var dist = global_position.distance_to(tree.global_position)
+		if dist < min_dist:
+			min_dist = dist
+			nearest_tree = tree
+	
+	if nearest_tree:
+		target_tree = nearest_tree
+		current_state = State.WANDERING # Use wandering to move toward it
+		if target_tree.has_method("get_pee_position"):
+			target_position = target_tree.get_pee_position()
+		else:
+			target_position = target_tree.global_position
+		bored_timer = 0.0
+
+func _process_peeing(delta: float) -> void:
+	velocity = Vector2.ZERO
+	pee_timer -= delta
+	
+	if pee_timer <= 0:
+		if target_tree and target_tree.has_method("mark_as_peed_on"):
+			target_tree.mark_as_peed_on()
+		current_state = State.IDLE
+		bored_timer = 0.0
+
+func _start_peeing() -> void:
+	current_state = State.PEEING
+	pee_timer = 2.0 # Peeing takes 2 seconds
+	if animated_sprite:
+		animated_sprite.play("idle_down") 
 
 func _process_held(delta: float) -> void:
 	# Position controlled by player, but check for wildlife with low bonding
@@ -154,7 +199,6 @@ func _process_held(delta: float) -> void:
 	# Charlie spots wildlife within attraction radius - chance to jump out!
 	if dist < wildlife_attraction_radius:
 		# Lower bonding = higher chance to escape
-		# At 0 bonding: 3% chance per frame, at 0.5 bonding: 0% chance
 		var escape_chance = (0.5 - GameState.bonding) * 0.06  # ~3% at 0 bonding
 		if randf() < escape_chance:
 			_jump_out_and_chase(nearest)
@@ -255,10 +299,6 @@ func _is_direction_clear(direction: Vector2, distance: float) -> bool:
 	var future_pos = global_position + direction * distance
 	var charlie_rect = Rect2(future_pos.x - 10, future_pos.y - 6, 20, 12)
 
-	# Check room bounds
-	if future_pos.x < 25 or future_pos.x > 400 or future_pos.y < 55 or future_pos.y > 275:
-		return false
-
 	# Check furniture
 	for furn_rect in furniture_rects:
 		if charlie_rect.intersects(furn_rect):
@@ -267,6 +307,18 @@ func _is_direction_clear(direction: Vector2, distance: float) -> bool:
 	return true
 
 func _process_wandering(delta: float) -> void:
+	# Check if we are moving toward a tree
+	if target_tree and target_position != Vector2.ZERO:
+		var dist = global_position.distance_to(target_position)
+		if dist < 5.0:
+			_start_peeing()
+			target_position = Vector2.ZERO
+			return
+		else:
+			velocity = (target_position - global_position).normalized() * speed * 0.7
+			_update_animation()
+			return
+
 	wander_timer -= delta
 
 	if wander_timer <= 0:
@@ -285,6 +337,7 @@ func _process_wandering(delta: float) -> void:
 			wander_direction = (player_ref.global_position - global_position).normalized()
 
 	velocity = wander_direction * speed * 0.5
+	_check_for_boredom(delta)
 
 func _process_fetching(delta: float) -> void:
 	if not ball_ref:
@@ -397,26 +450,21 @@ func _process_keep_away(delta: float) -> void:
 
 		velocity = flee_direction * speed * speed_mult
 
-		# Avoid corners - if near wall, try to go along it
+		# Avoid corners
 		var new_pos = global_position + velocity * delta
 		var wall_avoid = Vector2.ZERO
 
 		if new_pos.x < 45:
 			wall_avoid.x = 1.0
-			flee_direction.x = abs(flee_direction.x) * 0.5 + wall_avoid.x * 0.5
 		elif new_pos.x > 380:
 			wall_avoid.x = -1.0
-			flee_direction.x = -abs(flee_direction.x) * 0.5 + wall_avoid.x * 0.5
 
 		if new_pos.y < 45:
 			wall_avoid.y = 1.0
-			flee_direction.y = abs(flee_direction.y) * 0.5 + wall_avoid.y * 0.5
 		elif new_pos.y > 200:
 			wall_avoid.y = -1.0
-			flee_direction.y = -abs(flee_direction.y) * 0.5 + wall_avoid.y * 0.5
 
 		if wall_avoid != Vector2.ZERO:
-			# When cornered, try to slip past player
 			var perpendicular = Vector2(-flee_direction.y, flee_direction.x)
 			if randf() > 0.5:
 				perpendicular = -perpendicular
@@ -425,36 +473,22 @@ func _process_keep_away(delta: float) -> void:
 		velocity = flee_direction * speed * speed_mult
 
 	elif distance_to_player < 120:
-		# Medium distance - playful dodging
 		flee_direction = (global_position - player_ref.global_position).normalized()
-
-		# Circle around player sometimes
 		if randf() < 0.1:
 			var perpendicular = Vector2(-flee_direction.y, flee_direction.x)
 			flee_direction = (flee_direction * 0.3 + perpendicular * 0.7).normalized()
-
 		velocity = flee_direction * speed * 1.0
 
 	else:
-		# Far from player - taunt by pausing, then making small movements
 		if keep_away_timer < 2.0:
-			# Taunt: stop and look at player
 			velocity = velocity.lerp(Vector2.ZERO, 0.2)
-
-			# Occasionally do a playful hop in place
 			if randf() < 0.03:
-				# Small excited movement
 				flee_direction = Vector2(randf_range(-1, 1), randf_range(-1, 1)).normalized()
 				velocity = flee_direction * speed * 0.5
 		else:
-			# Wander slowly while watching player
 			if randf() < 0.03:
 				flee_direction = Vector2(randf_range(-1, 1), randf_range(-1, 1)).normalized()
 			velocity = flee_direction * speed * 0.35
-
-	# Clamp to room bounds (updated for larger house)
-	global_position.x = clampf(global_position.x, 25, 400)
-	global_position.y = clampf(global_position.y, 60, 270)
 
 	# After timer expires, reset for next taunt cycle
 	if keep_away_timer <= 0:
@@ -481,25 +515,18 @@ func _process_on_leash(delta: float) -> void:
 	_check_wildlife_attraction(delta)
 
 	# Calculate how distracted Charlie is by wildlife
-	# Higher bonding = less distraction (trained dogs focus better)
 	var distraction_factor = wildlife_excitement * (1.0 - GameState.bonding * 0.7)
 
-	# High bonding (>= 0.5): Charlie follows the player nicely (but may be distracted)
 	if GameState.bonding >= 0.5:
-		# Match player position with offset
 		var target = player_ref.global_position + Vector2(20, 20)
-
-		# If attracted to wildlife, bias toward it
 		if attracted_to_wildlife and is_instance_valid(attracted_to_wildlife) and distraction_factor > 0.2:
 			var wildlife_dir = (attracted_to_wildlife.global_position - global_position).normalized()
 			var player_dir = (target - global_position).normalized()
-			# Blend between player and wildlife based on distraction
 			var blended_dir = (player_dir * (1.0 - distraction_factor) + wildlife_dir * distraction_factor).normalized()
-
 			if global_position.distance_to(target) > 5:
-				velocity = blended_dir * speed * (1.0 + distraction_factor * 0.5)  # Slightly faster when excited
+				velocity = blended_dir * speed * (1.0 + distraction_factor * 0.5)
 			else:
-				velocity = wildlife_dir * speed * distraction_factor * 0.5  # Pull toward wildlife
+				velocity = wildlife_dir * speed * distraction_factor * 0.5
 		else:
 			if global_position.distance_to(target) > 5:
 				var direction = (target - global_position).normalized()
@@ -507,93 +534,61 @@ func _process_on_leash(delta: float) -> void:
 			else:
 				velocity = Vector2.ZERO
 	else:
-		# Low bonding: Charlie is easily distracted and actively chases wildlife
 		var is_chasing_wildlife = attracted_to_wildlife and is_instance_valid(attracted_to_wildlife) and distraction_factor > 0.1
-
 		if is_chasing_wildlife:
-			# Actively chase wildlife - low bonding dogs are very distracted!
 			var wildlife_dir = (attracted_to_wildlife.global_position - global_position).normalized()
-			var chase_speed = speed * (1.0 + distraction_factor * 0.5)  # Faster when more excited
-
-			# Movement based on leash tension - but still try to chase
+			var chase_speed = speed * (1.0 + distraction_factor * 0.5)
 			if distance_to_player >= leash_max_distance:
-				# At max leash length - blend between chasing and being pulled back
-				# Low bonding = still tries to chase even when leash is maxed
-				var chase_factor = 0.4 * distraction_factor  # Still pulls toward wildlife
+				var chase_factor = 0.4 * distraction_factor
 				velocity = (wildlife_dir * chase_factor + direction_to_player * (1.0 - chase_factor)).normalized() * speed * 0.4
 			elif leash_tension > 0.7:
-				# Leash getting tight but Charlie still wants the wildlife
-				var tension_blend = (leash_tension - 0.7) / 0.3  # 0 at 70%, 1 at 100%
+				var tension_blend = (leash_tension - 0.7) / 0.3
 				var chase_velocity = wildlife_dir * chase_speed
 				var constrained_velocity = direction_to_player * speed * 0.3
 				velocity = chase_velocity.lerp(constrained_velocity, tension_blend * 0.6)
 			else:
-				# Free to chase!
 				velocity = wildlife_dir * chase_speed
 		else:
-			# No wildlife nearby - normal wandering behavior
 			leash_wander_timer -= delta
-
 			if leash_wander_timer <= 0:
-				# Pick new random direction or stop
 				if randf() < 0.3:
 					leash_wander_direction = Vector2.ZERO
 				else:
 					leash_wander_direction = Vector2(randf_range(-1, 1), randf_range(-1, 1)).normalized()
 				leash_wander_timer = randf_range(1.0, 3.0)
 
-			# Movement based on leash tension
 			if distance_to_player >= leash_max_distance:
-				# At max leash length - must follow player, can't go further
 				velocity = direction_to_player * speed * 0.5
 			elif leash_tension > 0.7:
-				# Getting tight - reduce wandering, bias toward player
-				var wander_factor = 1.0 - ((leash_tension - 0.7) / 0.3)  # 1.0 at 70%, 0.0 at 100%
+				var wander_factor = 1.0 - ((leash_tension - 0.7) / 0.3)
 				var wander_velocity = leash_wander_direction * speed * 0.4 * wander_factor
 				var pull_velocity = direction_to_player * speed * 0.3 * (1.0 - wander_factor)
 				velocity = wander_velocity + pull_velocity
 			else:
-				# Free to wander within leash range
 				velocity = leash_wander_direction * speed * 0.5
 
-	# Calculate resistance: only when leash is taut (>70%) AND player moving AWAY from Charlie
+	# Calculate resistance
 	if leash_tension >= 0.7 and player_velocity.length() > 5:
 		var player_dir = player_velocity.normalized()
-		# direction_to_player points FROM Charlie TO Player
-		# If player moves in same direction as direction_to_player, they're moving AWAY from Charlie
-		# If player moves opposite to direction_to_player, they're moving TOWARD Charlie
 		var moving_away_factor = player_dir.dot(direction_to_player)
-
-		if moving_away_factor > 0.2:  # Player moving away from Charlie
-			# Resistance scales from 0 at 70% to full at 100%
+		if moving_away_factor > 0.2:
 			var tension_factor = clampf((leash_tension - 0.7) / 0.3, 0.0, 1.0)
 			resistance_amount = tension_factor * moving_away_factor
-
-			# Extra resistance if Charlie is excited about wildlife
-			# Low bonding + wildlife = much more resistance!
 			if distraction_factor > 0.1:
 				var wildlife_resistance = distraction_factor * 0.5
-				# Low bonding amplifies wildlife distraction resistance
 				if GameState.bonding < 0.5:
-					wildlife_resistance *= (1.5 - GameState.bonding)  # Up to 1.5x at 0 bonding
+					wildlife_resistance *= (1.5 - GameState.bonding)
 				resistance_amount += wildlife_resistance
-
 			resistance_amount = clampf(resistance_amount, 0.0, 1.0)
 			is_resisting = resistance_amount > 0.1
-
-			# When at max leash length, Charlie gets dragged reluctantly
 			if distance_to_player >= leash_max_distance * 0.95:
-				# Charlie is being dragged - move toward player but slowly and reluctantly
 				var drag_speed = speed * 0.3 * tension_factor
 				velocity = direction_to_player * drag_speed
-				# Maximum resistance when being dragged (even more if distracted by wildlife)
 				resistance_amount = 1.0
 				is_resisting = true
 
 func _check_wildlife_attraction(delta: float) -> void:
-	# Find nearest wildlife within attraction radius
 	attracted_to_wildlife = null
-
 	if wildlife_spawner_ref and wildlife_spawner_ref.has_method("get_nearest_wildlife_to"):
 		var nearest = wildlife_spawner_ref.get_nearest_wildlife_to(global_position)
 		if nearest and is_instance_valid(nearest):
@@ -601,14 +596,11 @@ func _check_wildlife_attraction(delta: float) -> void:
 			if dist < wildlife_attraction_radius:
 				attracted_to_wildlife = nearest
 
-	# Update excitement level
 	if attracted_to_wildlife:
-		# Excitement builds when wildlife is nearby
 		var distance = global_position.distance_to(attracted_to_wildlife.global_position)
 		var closeness = 1.0 - (distance / wildlife_attraction_radius)
 		wildlife_excitement = lerpf(wildlife_excitement, closeness, delta * 3.0)
 	else:
-		# Excitement fades when no wildlife
 		wildlife_excitement = lerpf(wildlife_excitement, 0.0, delta * 2.0)
 
 func set_wildlife_spawner(spawner: Node) -> void:
@@ -624,33 +616,26 @@ func _update_animation() -> void:
 	var anim_name: String = ""
 	var is_moving: bool = velocity.length() >= 5
 
-	# Determine facing direction
 	if is_moving:
 		if abs(velocity.x) > abs(velocity.y):
 			facing_direction = "right" if velocity.x > 0 else "left"
 		else:
 			facing_direction = "down" if velocity.y > 0 else "up"
 
-	# Build animation name
 	var action: String = "walk" if is_moving else "idle"
 	anim_name = action + "_" + facing_direction
 
-	# Add ball suffix if Charlie has the ball
 	if has_ball:
 		var ball_anim: String = anim_name + "_ball"
-		# Check if ball animation exists (we have ball anims for down, left, right but not up)
 		if animated_sprite.sprite_frames.has_animation(ball_anim):
 			anim_name = ball_anim
-		elif facing_direction == "up" and has_ball:
-			# Fallback to down_ball for up direction
+		elif facing_direction == "up":
 			anim_name = action + "_down_ball"
 
-	# Only play if animation exists
 	if animated_sprite.sprite_frames.has_animation(anim_name):
 		if animated_sprite.animation != anim_name:
 			animated_sprite.play(anim_name)
 	else:
-		# Fallback to idle_down
 		if animated_sprite.animation != "idle_down":
 			animated_sprite.play("idle_down")
 
@@ -701,50 +686,35 @@ func take_ball_from_charlie() -> bool:
 
 func interact(player: Node2D) -> void:
 	emit_signal("charlie_interacted")
-
-	# If Charlie has ball, take it
 	if has_ball:
 		take_ball_from_charlie()
 		GameState.do_fetch_success()
 	elif player.has_method("pickup") and player.held_object == null:
-		# Pick up Charlie (works whether on leash or not)
 		player.pickup(self)
 
 func _get_pet() -> void:
-	# Increase bonding when petted
-	var bonding_increase = 0.05  # 5% per pet
+	var bonding_increase = 0.05
 	GameState.bonding = clampf(GameState.bonding + bonding_increase, 0.0, 1.0)
 	GameState.emit_signal("stats_changed")
-
-	# Brief pause to show Charlie enjoying the pet
 	velocity = Vector2.ZERO
-
-	# Visual feedback - could add animation here later
 	print("Charlie enjoys the head rub! Bonding: %d%%" % int(GameState.bonding * 100))
 
 func get_picked_up() -> void:
-	# Remember if we were on leash before being picked up
 	var was_on_leash = is_on_leash
 	if is_on_leash:
-		# Temporarily remove leash while held
 		is_on_leash = false
 		is_resisting = false
 		resistance_amount = 0.0
-
 	current_state = State.HELD
 	visible = false
 	$CollisionShape2D.set_deferred("disabled", true)
 	emit_signal("charlie_interacted")
-
-	# Store leash state for when dropped
 	set_meta("was_on_leash", was_on_leash)
 
 func get_dropped(drop_pos: Vector2) -> void:
 	global_position = drop_pos
 	visible = true
 	$CollisionShape2D.set_deferred("disabled", false)
-
-	# Restore leash state if we were on leash before
 	if has_meta("was_on_leash") and get_meta("was_on_leash"):
 		equip_leash()
 		remove_meta("was_on_leash")
@@ -752,27 +722,16 @@ func get_dropped(drop_pos: Vector2) -> void:
 		current_state = State.IDLE
 
 func _jump_out_and_chase(wildlife: Node2D) -> void:
-	# Charlie jumps out of player's arms to chase wildlife!
 	if not player_ref:
 		return
-
-	print("Charlie spots %s and jumps out of your arms!" % wildlife.get_wildlife_name() if wildlife.has_method("get_wildlife_name") else "wildlife")
-
-	# Force the player to drop Charlie
 	if player_ref.has_method("drop"):
-		# Set position near player before dropping
 		global_position = player_ref.global_position + Vector2(randf_range(-15, 15), randf_range(-15, 15))
 		visible = true
 		$CollisionShape2D.set_deferred("disabled", false)
-
-		# Clear held_object on player
 		player_ref.held_object = null
 
-	# Set up chase state
 	attracted_to_wildlife = wildlife
-	wildlife_excitement = 1.0  # Maximum excitement!
-
-	# Restore leash if we were on one
+	wildlife_excitement = 1.0
 	if has_meta("was_on_leash") and get_meta("was_on_leash"):
 		equip_leash()
 		remove_meta("was_on_leash")

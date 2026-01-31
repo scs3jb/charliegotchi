@@ -185,17 +185,17 @@ func set_charlie(charlie: Node2D) -> void:
 	charlie_ref = charlie
 
 func get_leash_hand_offset() -> Vector2:
-	# Return offset from player center to hand position based on facing direction
+	# Return offset from player origin (feet) to hand position based on facing direction
 	if abs(facing_direction.x) > abs(facing_direction.y):
 		if facing_direction.x > 0:
-			return Vector2(10, 4)  # Right hand when facing right
+			return Vector2(8, -14)  # Right hand when facing right
 		else:
-			return Vector2(-10, 4)  # Left hand when facing left
+			return Vector2(-8, -14)  # Left hand when facing left
 	else:
 		if facing_direction.y > 0:
-			return Vector2(8, 8)  # Hand when facing down (visible at side)
+			return Vector2(8, -14)  # Hand when facing down
 		else:
-			return Vector2(-8, 4)  # Hand when facing up (visible at side)
+			return Vector2(-8, -14)  # Hand when facing up
 
 func _on_interaction_area_body_entered(body: Node2D) -> void:
 	if body.is_in_group("interactable"):
