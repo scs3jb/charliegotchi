@@ -50,6 +50,7 @@ Trees use a **Split-Sprite System** to ensure characters can walk behind the tru
 - [ ] Leaves at `z_index = 1`.
 - [ ] `y_sort_enabled = true` on the root `StaticBody2D`.
 - [ ] Added to the "trees" group in `Tree.gd`.
+- [ ] Has `last_peed_time: float` property (initialized to -999.0) for the refractory system.
 
 ---
 

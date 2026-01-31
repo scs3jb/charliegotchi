@@ -210,6 +210,25 @@ When Charlie gets close enough:
 - Charlie gains entertainment based on wildlife type
 - Wildlife fades out and despawns after 1.5 seconds
 
+### Sniffari Mechanic
+A specialized exploration mode where Charlie leads the player.
+-   **Trigger**: Press **[F]** when near Charlie in the Overworld (if available).
+-   **Availability**: Every **3 in-game hours**.
+-   **Full Bonding Rule**: If full bonding (1.0) is reached after a Sniffari, another cannot be started until the **next in-game day**.
+-   **Duration**: 50 seconds.
+-   **Behavior**: Charlie automatically visits trees, pees, chases wildlife, or sniffs grass.
+-   **Follow Logic**: Player automatically follows Charlie at leash distance with smooth interpolation.
+-   **Rewards**: **+20% Bonding** every 10 seconds (total +100% possible).
+
+### Tree Interactions & Peeing
+Charlie naturally interacts with trees in the Overworld.
+-   **Boredom Trigger**: Charlie seeks a tree after 5s of being idle or wandering.
+-   **On-Leash Behavior**: Charlie will actively pull toward a tree if leashed, slowing the player.
+-   **Peeing Duration**: 6 to 8 seconds.
+-   **Visuals**: Subtle yellow particle stream and a temporary puddle (3-4s lifetime).
+-   **Refractory Period**: Charlie will not pee on the same tree again for **4 in-game hours**.
+-   **Interruption**: Picking Charlie up or starting a Sniffari cancels peeing and leaves a small "partial" puddle.
+
 ## Scene-Specific Rules
 
 ### Environment & Layering (Y-Sorting)
