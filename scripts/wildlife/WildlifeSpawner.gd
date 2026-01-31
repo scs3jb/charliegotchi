@@ -1,6 +1,7 @@
 extends Node2D
 class_name WildlifeSpawner
 ## WildlifeSpawner - Manages spawning of wildlife in the Overworld
+## Now supports per-screen spawning with biome-based weights
 
 const Butterfly = preload("res://scripts/wildlife/Butterfly.gd")
 const Bird = preload("res://scripts/wildlife/Bird.gd")
@@ -10,20 +11,34 @@ const Squirrel = preload("res://scripts/wildlife/Squirrel.gd")
 @export var spawn_interval_min: float = 8.0
 @export var spawn_interval_max: float = 15.0
 
-# Spawn weights (higher = more likely)
+# Default spawn weights (higher = more likely)
 var spawn_weights = {
 	"butterfly": 5,
 	"bird": 3,
 	"squirrel": 2
 }
 
-# Spawn area bounds
+# Biome-specific spawn weight modifiers
+var biome_weights = {
+	"Beach": {"butterfly": 3, "bird": 5, "squirrel": 0},
+	"Meadow": {"butterfly": 7, "bird": 3, "squirrel": 2},
+	"Forest": {"butterfly": 3, "bird": 4, "squirrel": 6},
+	"Lake": {"butterfly": 4, "bird": 6, "squirrel": 1},
+	"Mountain": {"butterfly": 1, "bird": 4, "squirrel": 0},
+	"Cliffs": {"butterfly": 2, "bird": 5, "squirrel": 0},
+	"Home": {"butterfly": 5, "bird": 3, "squirrel": 2},
+	"Path": {"butterfly": 4, "bird": 3, "squirrel": 3},
+	"Bridge": {"butterfly": 3, "bird": 5, "squirrel": 0},
+}
+
+# Spawn area bounds (updated per-screen by Overworld.gd)
 var spawn_min: Vector2 = Vector2(50, 150)
 var spawn_max: Vector2 = Vector2(800, 430)
 
 # References
 var charlie_ref: Node2D = null
 var player_ref: Node2D = null
+var current_biome: String = "Meadow"
 
 # State
 var spawn_timer: float = 5.0  # Initial delay before first spawn
@@ -42,20 +57,31 @@ func _process(delta: float) -> void:
 		# Adjust spawn rate based on weather/time
 		spawn_timer *= _get_spawn_modifier()
 
+func set_biome(biome_name: String) -> void:
+	"""Set the current biome for spawn weight adjustments."""
+	current_biome = biome_name
+	if biome_name in biome_weights:
+		spawn_weights = biome_weights[biome_name].duplicate()
+
 func _try_spawn_wildlife() -> void:
 	# Clean up dead references
 	active_wildlife = active_wildlife.filter(func(w): return is_instance_valid(w))
 
-	# Check max wildlife limit
-	if active_wildlife.size() >= max_wildlife:
+	# Check max wildlife limit (per-screen)
+	var wildlife_on_screen = _count_wildlife_on_screen()
+	if wildlife_on_screen >= max_wildlife:
 		return
 
 	# Check weather/time conditions
 	if not _should_spawn():
 		return
 
-	# Pick random wildlife type based on weights
+	# Pick random wildlife type based on weights (biome-adjusted)
 	var wildlife_type = _pick_weighted_type()
+
+	# Skip if type has 0 weight (not found in this biome)
+	if spawn_weights.get(wildlife_type, 0) <= 0:
+		return
 
 	# Pick spawn position away from player
 	var spawn_pos = _get_spawn_position(wildlife_type)
@@ -71,6 +97,18 @@ func _try_spawn_wildlife() -> void:
 		wildlife.wildlife_despawned.connect(_on_wildlife_despawned)
 		add_child(wildlife)
 		active_wildlife.append(wildlife)
+
+func _count_wildlife_on_screen() -> int:
+	"""Count how many wildlife are within current screen bounds."""
+	var count = 0
+	for wildlife in active_wildlife:
+		if not is_instance_valid(wildlife):
+			continue
+		var pos = wildlife.global_position
+		if pos.x >= spawn_min.x - 50 and pos.x <= spawn_max.x + 50:
+			if pos.y >= spawn_min.y - 50 and pos.y <= spawn_max.y + 50:
+				count += 1
+	return count
 
 func _should_spawn() -> bool:
 	# Less wildlife at night
@@ -111,6 +149,9 @@ func _pick_weighted_type() -> String:
 	for weight in spawn_weights.values():
 		total_weight += weight
 
+	if total_weight <= 0:
+		return "butterfly"  # Fallback
+
 	var roll = randi() % total_weight
 	var current = 0
 
@@ -125,13 +166,17 @@ func _get_spawn_position(type: String = "") -> Vector2:
 	# If it's a squirrel, try to spawn near a tree
 	if type == "squirrel":
 		var trees = get_tree().get_nodes_in_group("trees")
-		if trees.size() > 0:
-			var tree = trees[randi() % trees.size()]
+		var valid_trees = trees.filter(func(t):
+			var pos = t.global_position
+			return pos.x >= spawn_min.x and pos.x <= spawn_max.x and pos.y >= spawn_min.y and pos.y <= spawn_max.y
+		)
+		if valid_trees.size() > 0:
+			var tree = valid_trees[randi() % valid_trees.size()]
 			# Spawn in a small radius around the tree
 			var angle = randf() * PI * 2
 			var dist = randf_range(20, 50)
 			var pos = tree.global_position + Vector2(cos(angle), sin(angle)) * dist
-			
+
 			# Ensure it's within bounds
 			pos.x = clampf(pos.x, spawn_min.x, spawn_max.x)
 			pos.y = clampf(pos.y, spawn_min.y, spawn_max.y)
@@ -212,3 +257,14 @@ func get_nearest_wildlife_to(pos: Vector2) -> Node2D:
 			nearest_dist = dist
 
 	return nearest
+
+func despawn_wildlife_outside_screen() -> void:
+	"""Remove wildlife that is outside the current screen bounds."""
+	for wildlife in active_wildlife:
+		if not is_instance_valid(wildlife):
+			continue
+		var pos = wildlife.global_position
+		if pos.x < spawn_min.x - 100 or pos.x > spawn_max.x + 100:
+			wildlife.queue_free()
+		elif pos.y < spawn_min.y - 100 or pos.y > spawn_max.y + 100:
+			wildlife.queue_free()

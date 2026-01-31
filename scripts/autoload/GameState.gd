@@ -55,6 +55,10 @@ const SNIFFARI_COOLDOWN: float = 3.0 # hours
 var current_day: int = 1
 var current_hour: float = 8.0  # 8 AM start
 
+# World Position (for multi-screen overworld)
+var current_screen: Vector2i = Vector2i(-1, -1)  # -1,-1 means use default
+var player_world_position: Vector2 = Vector2(-1, -1)  # -1,-1 means use default
+
 # Save file path
 const SAVE_PATH = "user://savegame.save"
 
@@ -176,7 +180,11 @@ func save_game() -> void:
 		"current_hour": current_hour,
 		"last_sniffari_time": last_sniffari_time,
 		"last_sniffari_day": last_sniffari_day,
-		"full_bonding_reached_today": full_bonding_reached_today
+		"full_bonding_reached_today": full_bonding_reached_today,
+		"current_screen_x": current_screen.x,
+		"current_screen_y": current_screen.y,
+		"player_world_position_x": player_world_position.x,
+		"player_world_position_y": player_world_position.y
 	}
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
@@ -215,6 +223,14 @@ func load_game() -> bool:
 		last_sniffari_time = save_data.get("last_sniffari_time", -999.0)
 		last_sniffari_day = save_data.get("last_sniffari_day", -1)
 		full_bonding_reached_today = save_data.get("full_bonding_reached_today", false)
+		current_screen = Vector2i(
+			save_data.get("current_screen_x", -1),
+			save_data.get("current_screen_y", -1)
+		)
+		player_world_position = Vector2(
+			save_data.get("player_world_position_x", -1),
+			save_data.get("player_world_position_y", -1)
+		)
 		emit_signal("stats_changed")
 		return true
 	return false
@@ -246,4 +262,6 @@ func reset_game() -> void:
 	last_sniffari_time = -999.0
 	last_sniffari_day = -1
 	full_bonding_reached_today = false
+	current_screen = Vector2i(-1, -1)
+	player_world_position = Vector2(-1, -1)
 	emit_signal("stats_changed")

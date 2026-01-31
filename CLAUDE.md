@@ -53,13 +53,23 @@ charligotchi/
 │   └── ui/
 ├── assets/                # Art, audio, fonts
 │   ├── sprites/
-│   │   └── characters/
-│   │       ├── player_spritesheet.png  # Generated 128x416 sheet
-│   │       ├── charlie_spritesheet.png # Generated sheet
-│   │       └── ball_spritesheet.png
+│   │   ├── characters/
+│   │   │   ├── player_spritesheet.png  # Generated 128x416 sheet
+│   │   │   ├── charlie_spritesheet.png # Generated sheet
+│   │   │   └── ball_spritesheet.png
+│   │   └── tiles/
+│   │       └── terrain_atlas.png       # Generated 256x256 tileset
+├── scenes/
+│   └── props/
+│       ├── Tree.tscn      # Interactable tree with trunk/canopy split
+│       ├── Rock.tscn      # Impassable rock cluster
+│       ├── Bush.tscn      # Dense blocking bush
+│       └── Fence.tscn     # Wooden fence section
 └── resources/             # .tres resource files
-    └── sprites/
-        └── player_frames.tres # Maps animations to player_spritesheet.png
+    ├── sprites/
+    │   └── player_frames.tres # Maps animations to player_spritesheet.png
+    └── tilesets/
+        └── overworld_tileset.tres # TileSet resource for terrain
 ```
 
 ## Dev Status: Pixel Art Integration
@@ -77,6 +87,7 @@ Then run the generators:
 ```bash
 .venv/bin/python scripts/generate_player_extended.py  # Generates player_spritesheet.png (13 rows)
 .venv/bin/python generate_pixel_charlie.py            # Generates charlie_spritesheet.png
+.venv/bin/python scripts/generate_tileset.py          # Generates terrain_atlas.png (16x16 tiles)
 ```
 
 After regenerating, reimport assets and run verification:
@@ -102,6 +113,20 @@ The `player_spritesheet.png` (128x416) contains 13 rows, each with 4 frames (32x
 11. **Hold Walk Right**
 12. **Hold Walk Up**
 13. **Hold Walk Down**
+
+### Terrain Tileset (`assets/sprites/tiles/terrain_atlas.png`)
+Generated 256x256 atlas with 16x16 tiles. Run `scripts/generate_tileset.py` to regenerate.
+
+**Tile Index Reference**:
+| Index Range | Tile Type |
+|-------------|-----------|
+| 0-15 | Grass variants (0=base, 1=light, 2=dark, 3-6=flowers) |
+| 16-31 | Dirt/path (16=base, 17-24=edges) |
+| 32-47 | Sand (32=base, 33-40=edges) |
+| 48-55 | Water (48-51=shallow animated, 52-55=deep animated) |
+| 56-79 | Water edges |
+| 80-95 | Cliff/mountain (80=base, 81=top with grass) |
+| 96-97 | Bridge (96=horizontal, 97=vertical) |
 
 ## Common Fixes & Troubleshooting
 
@@ -249,14 +274,33 @@ See [ENVIRONMENT_GUIDE.md](ENVIRONMENT_GUIDE.md) for full details.
 - Uses full animated player sprite (not placeholder)
 
 ### Overworld (`Overworld.tscn`)
+- **Multi-Screen World**: 6x4 grid of screens (2556x960 pixels total)
+- **Screen Size**: 426x240 pixels (viewport size)
+- **Zelda-style Transitions**: Camera scrolls when player crosses screen boundaries
 - Charlie is always on leash
 - `LeashLine` (Line2D) renders between player hand and Charlie collar
 - Player speed reduces based on Charlie's resistance
-- `WildlifeSpawner` node manages wildlife spawning
+- `WildlifeSpawner` node manages wildlife spawning (per-screen bounds)
 - Wildlife (butterflies, birds, squirrels) spawn periodically
 - Charlie gets excited and pulls toward nearby wildlife
 - Leash color changes to orange when Charlie spots wildlife
 
+**Biome Layout (6x4 grid)**:
+```
+[Beach ] [Meadow] [Meadow] [Forest] [Forest] [Mountain]
+[Beach ] [Home  ] [Meadow] [Forest] [Lake  ] [Mountain]
+[Beach ] [Meadow] [Path  ] [Path  ] [Lake  ] [Mountain]
+[Cliffs] [Cliffs] [Bridge] [Path  ] [Forest] [Mountain]
+```
+
+**Screen Transition Behavior**:
+- Player/Charlie movement frozen during 0.4s transition
+- Camera limits tween to new screen bounds
+- Charlie pulled along with player through transitions
+- Wildlife spawner bounds updated per-screen
+- Position saved to GameState for persistence
+
 ### Pending Features
 - Sleep system
-- Sniffari mechanics
+- Paint tiles in TileMap (currently using fallback ColorRect background)
+- Add collision shapes to water/cliff tiles in TileSet
