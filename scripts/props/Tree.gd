@@ -6,6 +6,7 @@ class_name TreeProp
 @onready var interaction_area = $InteractionArea
 
 var has_been_peed_on: bool = false
+var last_peed_time: float = -999.0 # Total game hours
 var squirrel_occupant: Node2D = null
 
 func _ready() -> void:
@@ -18,8 +19,8 @@ func _on_area_entered(area: Area2D) -> void:
 	pass
 
 func get_pee_position() -> Vector2:
-	# Return a position slightly to the side of the trunk
-	return global_position + Vector2(10, 5)
+	# Return a position slightly further to the side of the trunk to avoid collision
+	return global_position + Vector2(18, 8)
 
 func mark_as_peed_on() -> void:
 	has_been_peed_on = true

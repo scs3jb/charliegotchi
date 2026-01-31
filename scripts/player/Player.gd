@@ -68,6 +68,28 @@ func _physics_process(delta: float) -> void:
 
 	# Apply movement
 	velocity = input_dir * current_speed
+	
+	# Constrain movement by leash length
+	if charlie_ref and charlie_ref.is_on_leash:
+		var next_pos = global_position + velocity * delta
+		var dist_to_charlie = next_pos.distance_to(charlie_ref.global_position)
+		
+		if dist_to_charlie > charlie_ref.leash_max_distance:
+			# If trying to move further away, constrain velocity
+			var dir_from_charlie = (next_pos - charlie_ref.global_position).normalized()
+			
+			# Project velocity so we can only move perpendicular or toward Charlie
+			# (Allows circling Charlie but not walking away)
+			var dot = velocity.dot(dir_from_charlie)
+			if dot > 0:
+				velocity -= dir_from_charlie * dot
+				
+			# If Charlie is peeing, he's a very firm anchor
+			if charlie_ref.current_state == charlie_ref.State.PEEING:
+				# Even more restrictive projection or just stop if very taut
+				if dist_to_charlie > charlie_ref.leash_max_distance + 2:
+					velocity = Vector2.ZERO
+
 	move_and_slide()
 
 	# Update animation
