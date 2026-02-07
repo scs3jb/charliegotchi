@@ -11,6 +11,14 @@ To run the game run godot from the commandline
 ```bash
 godot
 ```
+## Key Files
+- `scripts/generate_populated_overworld.py` - Generates `scenes/Overworld.tscn` with all props. ~1288 props across 24 screens (6x4 grid). Uses smart placement helpers (rejection sampling, Gaussian clusters, wall formations).
+- `generate_scene()` in that file contains the full .tscn template including Charlie atlas textures, HUD, Player, etc. Only prop generation functions above it should be modified for density/placement changes.
+
+## Architecture Notes
+- House is at position (640, 320) in the Overworld scene. Exclusion zone for props: (580, 260) to (700, 420).
+- Biome grid is 6 cols x 4 rows, each screen 426x240px, total world 2556x960px.
+- Props use PackedScene instances (Tree, Rock, Bush, Fence, FlowerPatch, WaterBody, MountainWall, CliffWall, PathTile, BridgeTile, Signpost).
 
 ### Automated Verification
 Automated verificaiton should be run everytime assets or scenes are changed.
@@ -20,7 +28,9 @@ Claude must always verify the integrity of animations and scenes (headless mode)
 godot -s scripts/verify_animations.gd --headless  # Checks Player.gd animation logic
 godot -s test_scenes.gd --headless            # Checks scene loading
 ```
-Animation must be smooth with no visual issues.
+- Always `rm -rf .godot/imported && godot --headless --import` after asset changes.
+- Autoload errors in headless mode ("Identifier not found: GameState/TimeWeather") are expected and benign — the scenes still load fine.
+- Animation must be smooth with no visual issues.
 
 ## Project Structure
 
