@@ -45,6 +45,9 @@ var feed_count: int = 0
 var pet_count: int = 0
 var fetch_success_count: int = 0
 
+# Feeding minigame
+var has_seen_feeding_tutorial: bool = false
+
 # Sniffari tracking
 var last_sniffari_time: float = -999.0 # Total game hours
 var last_sniffari_day: int = -1
@@ -120,6 +123,19 @@ func do_feed() -> void:
 	add_entertainment(0.125)
 	add_hunger(0.25)
 
+func do_feed_win() -> void:
+	feed_count += 1
+	hunger = 1.0
+	entertainment = 1.0
+	add_bonding(0.25)
+	emit_signal("stats_changed")
+	_check_trust_unlock()
+
+func do_feed_fail(bonding_penalty: float, entertainment_penalty: float) -> void:
+	feed_count += 1
+	add_bonding(-bonding_penalty)
+	add_entertainment(-entertainment_penalty)
+
 func do_pet() -> void:
 	pet_count += 1
 	add_bonding(0.25)
@@ -181,6 +197,7 @@ func save_game() -> void:
 		"last_sniffari_time": last_sniffari_time,
 		"last_sniffari_day": last_sniffari_day,
 		"full_bonding_reached_today": full_bonding_reached_today,
+		"has_seen_feeding_tutorial": has_seen_feeding_tutorial,
 		"current_screen_x": current_screen.x,
 		"current_screen_y": current_screen.y,
 		"player_world_position_x": player_world_position.x,
@@ -223,6 +240,7 @@ func load_game() -> bool:
 		last_sniffari_time = save_data.get("last_sniffari_time", -999.0)
 		last_sniffari_day = save_data.get("last_sniffari_day", -1)
 		full_bonding_reached_today = save_data.get("full_bonding_reached_today", false)
+		has_seen_feeding_tutorial = save_data.get("has_seen_feeding_tutorial", false)
 		current_screen = Vector2i(
 			save_data.get("current_screen_x", -1),
 			save_data.get("current_screen_y", -1)
@@ -262,6 +280,7 @@ func reset_game() -> void:
 	last_sniffari_time = -999.0
 	last_sniffari_day = -1
 	full_bonding_reached_today = false
+	has_seen_feeding_tutorial = false
 	current_screen = Vector2i(-1, -1)
 	player_world_position = Vector2(-1, -1)
 	emit_signal("stats_changed")

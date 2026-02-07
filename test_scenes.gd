@@ -11,6 +11,7 @@ var scenes_to_test = [
 	"res://scenes/props/Rock.tscn",
 	"res://scenes/props/Bush.tscn",
 	"res://scenes/props/Fence.tscn",
+	"res://scenes/minigames/FeedingMinigame.tscn",
 ]
 
 var passed = 0

@@ -129,16 +129,15 @@ func _on_interact_pressed() -> void:
 		_try_exit_door()
 
 func _feed_charlie() -> void:
-	GameState.do_feed()
-	hud.show_message("You fed Charlie! He wags his tail happily.", 2.0)
+	hud.show_message("Time to feed Charlie!", 1.5)
 
-	# Make Charlie come to food bowl
+	# Make Charlie walk to food bowl
 	charlie.target_position = food_bowl.global_position
 	charlie.start_following()
 
-	# After a moment, return to wandering
-	await get_tree().create_timer(2.0).timeout
-	charlie.start_wandering()
+	# Wait, then transition to feeding minigame
+	await get_tree().create_timer(1.0).timeout
+	get_tree().change_scene_to_file("res://scenes/minigames/FeedingMinigame.tscn")
 
 func _pet_charlie() -> void:
 	GameState.do_pet()
