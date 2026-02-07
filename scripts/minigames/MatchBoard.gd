@@ -18,7 +18,7 @@ const ALLERGEN_TYPES: Array = [TileType.CHICKEN, TileType.MUSHROOM]
 # Board config
 var board_cols: int = 7
 var board_rows: int = 7
-var move_limit: int = 20
+var move_limit: int = 10
 
 # Scoring
 var bowl_fill_per_tile: float = 0.04
@@ -269,6 +269,19 @@ func check_game_end() -> String:
 	if moves_remaining <= 0:
 		return "lost"
 	return ""
+
+func grid_pos_from_local(local_pos: Vector2, tile_size: int, tile_step: int) -> Vector2i:
+	var col = floori(local_pos.x / tile_step)
+	var row = floori(local_pos.y / tile_step)
+	# Reject clicks in gaps between tiles
+	var tile_local_x = local_pos.x - col * tile_step
+	var tile_local_y = local_pos.y - row * tile_step
+	if tile_local_x < 0 or tile_local_x > tile_size or tile_local_y < 0 or tile_local_y > tile_size:
+		return Vector2i(-1, -1)
+	# Reject out-of-bounds
+	if col < 0 or col >= board_cols or row < 0 or row >= board_rows:
+		return Vector2i(-1, -1)
+	return Vector2i(col, row)
 
 func get_tile(col: int, row: int) -> int:
 	if col >= 0 and col < board_cols and row >= 0 and row < board_rows:

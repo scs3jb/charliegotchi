@@ -97,7 +97,7 @@ func _build_ui() -> void:
 	add_child(bowl_bar)
 
 	moves_label = Label.new()
-	moves_label.text = "Moves: 20"
+	moves_label.text = "Moves: 10"
 	moves_label.position = Vector2(right_x, 48)
 	moves_label.add_theme_font_size_override("font_size", 12)
 	add_child(moves_label)
@@ -178,7 +178,7 @@ func _show_tutorial_page(page: int) -> void:
 	var pages = [
 		"Charlie is allergic to almost\neverything - especially chicken\nand mushrooms!\n\nThey make him itchy\nand he scratches like crazy.",
 		"Match 3 or more kibble tiles\nby clicking two adjacent tiles\nto swap them.\n\nFill Charlie's bowl to win!",
-		"Watch out for chicken and\nmushroom tiles - matching\nthem reduces the bowl meter!\n\nYou have 20 moves. Good luck!",
+		"Watch out for chicken and\nmushroom tiles - matching\nthem reduces the bowl meter!\n\nYou have 10 moves. Good luck!",
 	]
 
 	var text_label = Label.new()
@@ -256,19 +256,10 @@ func _input(event: InputEvent) -> void:
 		return
 
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		var local_pos = event.position - BOARD_ORIGIN
-		var col = int(local_pos.x / TILE_STEP)
-		var row = int(local_pos.y / TILE_STEP)
-
-		# Check click is within a tile (not in the gap)
-		var tile_local_x = local_pos.x - col * TILE_STEP
-		var tile_local_y = local_pos.y - row * TILE_STEP
-		if tile_local_x < 0 or tile_local_x > TILE_SIZE or tile_local_y < 0 or tile_local_y > TILE_SIZE:
+		var local_pos = board_container.get_local_mouse_position()
+		var clicked = board.grid_pos_from_local(local_pos, TILE_SIZE, TILE_STEP)
+		if clicked == Vector2i(-1, -1):
 			return
-		if col < 0 or col >= board.board_cols or row < 0 or row >= board.board_rows:
-			return
-
-		var clicked = Vector2i(col, row)
 
 		if selected_tile == Vector2i(-1, -1):
 			# Select first tile
@@ -362,7 +353,7 @@ func _process_cascade() -> void:
 
 		# Apply gravity
 		var movements = board.apply_gravity()
-		_sync_tile_nodes_after_gravity()
+		_apply_gravity_to_nodes(movements)
 		await _animate_gravity(movements)
 
 		# Refill board
@@ -395,32 +386,18 @@ func _animate_clear_matches() -> void:
 			tile_nodes[pos].queue_free()
 			tile_nodes.erase(pos)
 
-func _sync_tile_nodes_after_gravity() -> void:
-	# Rebuild tile_nodes dictionary to match current grid state
-	# Tiles have fallen - we need to re-map nodes to new positions
-	var old_nodes: Dictionary = tile_nodes.duplicate()
-	tile_nodes.clear()
+func _apply_gravity_to_nodes(movements: Array) -> void:
+	# Update tile_nodes keys to match gravity movements (order is bottom-up per column)
+	for move in movements:
+		var from_pos: Vector2i = move["from"]
+		var to_pos: Vector2i = move["to"]
+		if tile_nodes.has(from_pos):
+			var node = tile_nodes[from_pos]
+			tile_nodes.erase(from_pos)
+			tile_nodes[to_pos] = node
 
-	# Collect all valid remaining tile nodes
-	var available_nodes: Array = []
-	for pos in old_nodes:
-		if is_instance_valid(old_nodes[pos]):
-			available_nodes.append(old_nodes[pos])
-
-	# Map existing nodes to grid positions that have tiles
-	var node_idx = 0
-	for col in board.board_cols:
-		for row in range(board.board_rows - 1, -1, -1):
-			if board.grid[col][row] != -1:  # Not empty
-				if node_idx < available_nodes.size():
-					var node = available_nodes[node_idx]
-					tile_nodes[Vector2i(col, row)] = node
-					# Update texture to match new grid position
-					node.texture = _make_tile_atlas(board.grid[col][row])
-					node_idx += 1
-
-func _animate_gravity(movements: Array) -> void:
-	if movements.size() == 0:
+func _animate_gravity(_movements: Array) -> void:
+	if tile_nodes.is_empty():
 		return
 	var tween = create_tween().set_parallel(true)
 	for pos in tile_nodes:
